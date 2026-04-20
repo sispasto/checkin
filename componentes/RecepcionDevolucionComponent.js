@@ -1,6 +1,7 @@
-class BienvenidaComponent extends HTMLElement {
+class RecepcionDevolucionComponent extends HTMLElement {
   constructor() {
     super();
+    this._planillaSeleccionada = null;
   }
 
   async connectedCallback() {
@@ -13,33 +14,27 @@ class BienvenidaComponent extends HTMLElement {
     }
 
     try {
-      // 1. Cargar la vista
-      const response = await fetch("view/bienvenida.html");
+      // 1. Cargar el HTML de la vista
+      const response = await fetch("view/recepcion_devolucion.html");
       const htmlText = await response.text();
 
       const template = document.createElement("template");
       template.innerHTML = htmlText;
 
-      // 2. Manejar scripts
+      // 2. Extraer scripts para ejecución dinámica
       const scripts = template.content.querySelectorAll("script");
       scripts.forEach((script) => script.remove());
 
-      // 3. Renderizar contenido
+      // 3. Renderizar el HTML en el componente
       this.innerHTML = "";
       this.appendChild(template.content.cloneNode(true));
 
-      // 4. Actualizar versión (ahora solo se encarga de esto)
-      if (this.versionApp) {
-        const versionLabel = this.querySelector("#version-label");
-        if (versionLabel) {
-          versionLabel.textContent = `Asist v${this.versionApp}`;
-        }
-      }
-
-      // 5. Inyectar scripts dinámicos
+      // 4. Limpiar scripts dinámicos anteriores en el contenedor principal
       container
         .querySelectorAll('script[data-dynamic="true"]')
         .forEach((s) => s.remove());
+
+      // 5. Inyectar los scripts de la vista
       scripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
         if (oldScript.src) {
@@ -50,21 +45,24 @@ class BienvenidaComponent extends HTMLElement {
         newScript.setAttribute("data-dynamic", "true");
         container.appendChild(newScript);
       });
+
+      // 6. Inicializar la carga de datos si el namespace existe
+      // Esperamos un pequeño delay para asegurar que el script inyectado se procese
+      setTimeout(() => {
+        if (
+          window.nsRecepcionDevolucion &&
+          typeof window.nsRecepcionDevolucion.cargarPendientes === "function"
+        ) {
+          window.nsRecepcionDevolucion.cargarPendientes();
+        }
+      }, 100);
     } catch (error) {
-      console.error("Error al cargar bienvenida.html:", error);
+      console.error("Error al cargar recepcion_devolucion.html:", error);
     }
-  }
-
-  set versionApp(value) {
-    this._versionApp = value;
-    // Si el componente ya está montado, actualizamos la etiqueta inmediatamente
-    const label = this.querySelector("#version-label");
-    if (label) label.textContent = `Asist v${value}`;
-  }
-
-  get versionApp() {
-    return this._versionApp;
   }
 }
 
-customElements.define("bienvenida-component", BienvenidaComponent);
+customElements.define(
+  "recepcion-devolucion-component",
+  RecepcionDevolucionComponent,
+);

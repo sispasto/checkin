@@ -1,49 +1,85 @@
-const CACHE_NAME = 'app-cache-v1.8';
+const APP_VERSION = "1.0";
+const CACHE_NAME = `app-cache-v${APP_VERSION}`;
 
-self.addEventListener('install', function(e) {
-  console.log('Service Worker: Installed');
-  self.skipWaiting();
+self.addEventListener("install", (e) => {
+  //console.log("SW instalado - versión", APP_VERSION);
 
+  // ⚠️ NO usar skipWaiting (modo controlado)
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
+    caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
-        './',
-        './index.html',
-        './css/home.css',
-        './css/loader.css',
-        './js/main.js',
-        './componentes/index.js',
-        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
-        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
-        'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'
+        "./",
+        "./index.html",
+        "./css/home.css",
+        "./css/loader.css",
+        "./js/main.js",
+        "./componentes/index.js",
       ]);
-    })
+    }),
   );
 });
 
-self.addEventListener('activate', function(e) {
-  console.log('Service Worker: Activated');
+self.addEventListener("activate", (e) => {
+  console.log("SW activado - versión", APP_VERSION);
 
   e.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((names) => {
       return Promise.all(
-        cacheNames
-          .filter(name => name.startsWith('app-cache-v') && name !== CACHE_NAME)
-          .map(name => {
-            console.log('Service Worker: Deleting old cache', name);
+        names
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => {
+            //console.log("Eliminando cache viejo:", name);
             return caches.delete(name);
-          })
+          }),
       );
-    })
+    }),
   );
 
-  return self.clients.claim();
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', function(e) {
+self.addEventListener("fetch", (e) => {
+  if (e.request.method !== "GET") return;
+
   e.respondWith(
-    caches.match(e.request).then(response => {
-      return response || fetch(e.request);
-    })
+    caches.match(e.request).then((cachedResponse) => {
+      const fetchPromise = fetch(e.request)
+        .then((networkRes) => {
+          if (
+            !networkRes ||
+            networkRes.status !== 200 ||
+            networkRes.type === "opaque"
+          ) {
+            return networkRes;
+          }
+
+          const responseClone = networkRes.clone();
+
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseClone);
+          });
+
+          return networkRes;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
+    }),
   );
+});
+
+self.addEventListener("message", (event) => {
+  // 🔥 devolver versión
+  if (event.data === "GET_VERSION") {
+    event.source.postMessage({
+      type: "VERSION",
+      version: APP_VERSION,
+    });
+  }
+
+  // 🔥 activar manualmente cuando el usuario haga clic
+  if (event.data?.action === "SKIP_WAITING") {
+    //console.log("Activando nueva versión manualmente...");
+    self.skipWaiting();
+  }
 });

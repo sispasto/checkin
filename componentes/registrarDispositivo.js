@@ -1,10 +1,10 @@
-class vmodalComponent extends HTMLElement {
+class RegistrarDispositivoComponent extends HTMLElement {
   constructor() {
     super();
   }
 
   async connectedCallback() {
-    const containerSelector = this.getAttribute("container"); //|| '#App';
+    const containerSelector = this.getAttribute("container"); // ej: #App
     const container = document.querySelector(containerSelector);
 
     if (!container) {
@@ -13,39 +13,45 @@ class vmodalComponent extends HTMLElement {
     }
 
     try {
-      const response = await fetch("view/vmodal.html");
+      // Se actualizó la ruta a registroDispositivo.html
+      const response = await fetch("view/registrarDispositivo.html");
       const htmlText = await response.text();
 
-      // Crear un template para manipular el contenido
+      // Crear template para manipular el contenido
       const template = document.createElement("template");
       template.innerHTML = htmlText;
 
-      // Extraer scripts
+      // Extraer scripts del HTML
       const scripts = template.content.querySelectorAll("script");
-      scripts.forEach((script) => script.remove()); // Remover antes de clonar
+      scripts.forEach((script) => script.remove());
 
-      // Insertar el contenido HTML en el shadow DOM
+      // Insertar HTML en el componente
       this.innerHTML = "";
       this.appendChild(template.content.cloneNode(true));
-      // Limpiar scripts anteriores en el contenedor
+
+      // Limpiar scripts dinámicos anteriores
       container
         .querySelectorAll('script[data-dynamic="true"]')
         .forEach((s) => s.remove());
-      // Insertar los scripts dinámicamente en el contenedor
+
+      // Insertar scripts del HTML de forma dinámica
       scripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
+
         if (oldScript.src) {
           newScript.src = oldScript.src;
         } else {
           newScript.textContent = oldScript.textContent;
         }
-        newScript.setAttribute("data-dynamic", "true"); // para poder eliminarlos luego
+
+        newScript.setAttribute("data-dynamic", "true");
         container.appendChild(newScript);
       });
     } catch (error) {
-      console.error("Error al cargar vmodal.html:", error);
+      console.error("Error al cargar registrarDispositivo.html:", error);
     }
   }
 }
 
-customElements.define("vmodal-component", vmodalComponent);
+// Registro del nuevo nombre del componente
+customElements.define("registrar-dispositivo", RegistrarDispositivoComponent);

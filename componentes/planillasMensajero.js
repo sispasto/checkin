@@ -1,10 +1,10 @@
-class vmodalComponent extends HTMLElement {
+class PlanillasMensajero extends HTMLElement {
   constructor() {
     super();
   }
 
   async connectedCallback() {
-    const containerSelector = this.getAttribute("container"); //|| '#App';
+    const containerSelector = this.getAttribute("container");
     const container = document.querySelector(containerSelector);
 
     if (!container) {
@@ -13,25 +13,26 @@ class vmodalComponent extends HTMLElement {
     }
 
     try {
-      const response = await fetch("view/vmodal.html");
+      // Cargamos la vista HTML
+      const response = await fetch("view/planillasMensajero.html");
       const htmlText = await response.text();
 
-      // Crear un template para manipular el contenido
       const template = document.createElement("template");
       template.innerHTML = htmlText;
 
-      // Extraer scripts
+      // Extraer scripts para ejecución dinámica (como en tu BienvenidaComponent)
       const scripts = template.content.querySelectorAll("script");
-      scripts.forEach((script) => script.remove()); // Remover antes de clonar
+      scripts.forEach((script) => script.remove());
 
-      // Insertar el contenido HTML en el shadow DOM
       this.innerHTML = "";
       this.appendChild(template.content.cloneNode(true));
-      // Limpiar scripts anteriores en el contenedor
+
+      // Limpiar scripts anteriores en el contenedor para evitar duplicados
       container
         .querySelectorAll('script[data-dynamic="true"]')
         .forEach((s) => s.remove());
-      // Insertar los scripts dinámicamente en el contenedor
+
+      // Insertar los scripts dinámicamente
       scripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
         if (oldScript.src) {
@@ -39,13 +40,13 @@ class vmodalComponent extends HTMLElement {
         } else {
           newScript.textContent = oldScript.textContent;
         }
-        newScript.setAttribute("data-dynamic", "true"); // para poder eliminarlos luego
+        newScript.setAttribute("data-dynamic", "true");
         container.appendChild(newScript);
       });
     } catch (error) {
-      console.error("Error al cargar vmodal.html:", error);
+      console.error("Error al cargar planillas_mensajero.html:", error);
     }
   }
 }
 
-customElements.define("vmodal-component", vmodalComponent);
+customElements.define("planillas-mensajero", PlanillasMensajero);
