@@ -1,224 +1,275 @@
 <style>
-  .qr-container {
-    border-radius: 12px;
-    border: 4px solid #17a2b8;
-    background: white;
-    padding: 15px;
-    display: inline-block;
-    position: relative;
+  /* --- BOTÓN DE ESCANEO RE-ESTILIZADO (MODERNO) --- */
+  .btn-scan-pro {
+    background: #ffffff;
+    border: 1px solid #e1e4e8;
+    border-radius: 24px;
+    padding: 2.5rem 1.5rem;
+    width: 100%;
+    max-width: 320px;
+    margin: 25px auto;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+    outline: none;
   }
-  .card-asistencia {
-    background-color: #121418 !important;
-    border-radius: 15px !important;
+
+  .btn-scan-pro:hover {
+    transform: translateY(-5px);
+    border-color: #00f2ff;
+    box-shadow: 0 20px 40px rgba(0, 242, 255, 0.1);
+  }
+
+  .btn-scan-pro i {
+    font-size: 3.8rem;
+    color: #00f2ff;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 5px rgba(0, 242, 255, 0.2));
+  }
+
+  .btn-text {
+    font-weight: 700;
+    color: #1a1d21;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 0.95rem;
+  }
+
+  /* --- CORRECCIÓN DEL QR (CUADRADO PERFECTO) --- */
+  .modal-dialog {
+    margin-top: 2vh !important; /* Mantiene la modal arriba */
     max-width: 450px;
-    margin: auto;
   }
-  /* Barra de progreso integrada */
-  .progress-token {
-    height: 6px;
-    background-color: #333;
-    border-radius: 3px;
-    margin: 15px auto 5px auto;
-    width: 200px; /* Alineada al ancho del QR */
+
+  .modal-content {
+    background: #ffffff !important;
+    border-radius: 28px !important;
+    border: none !important;
     overflow: hidden;
   }
-  .progress-token-bar {
-    height: 100%;
-    background-color: #17a2b8;
-    width: 100%;
-    transition:
-      width 1s linear,
-      background-color 0.3s ease;
+
+  /* Contenedor del lector para asegurar ratio 1:1 */
+  #reader {
+    width: 100% !important;
+    border: none !important;
+    background: #000;
+    aspect-ratio: 1 / 1; /* FUERZA EL CUADRADO */
+    overflow: hidden;
   }
-  #qr-image {
-    transition: opacity 0.3s ease;
+
+  #reader video {
+    object-fit: cover !important; /* Llena el cuadrado sin deformar */
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Ajuste de la X de cerrar para que sea visible y estética */
+  .btn-close {
+    background-color: #f0f2f5 !important;
+    border-radius: 50% !important;
+    opacity: 1 !important;
+    padding: 0.8rem !important;
+    transition: background 0.2s;
+  }
+
+  .btn-close:hover {
+    background-color: #e4e6e9 !important;
+  }
+
+  /* Badge de la hora (se mantiene el que te gustó) */
+  .status-badge {
+    background: #00f2ff !important;
+    color: #000 !important;
+    padding: 12px 28px;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    box-shadow: 0 8px 20px rgba(0, 242, 255, 0.3);
+    font-family: "JetBrains Mono", monospace;
   }
 </style>
 
-<div class="container mt-4">
-  <div class="card card-asistencia text-white shadow-lg border-0">
-    <div class="card-header bg-gradient-dark py-3 border-secondary text-center">
-      <h5 class="mb-0 text-uppercase tracking-wider text-info">
-        <i class="bi bi-shield-lock-fill me-2"></i>Control de Asistencia
-      </h5>
+<div class="view-container">
+  <div class="header-section text-center">
+    <h3 class="title-main">ASIST-CONTROL</h3>
+    <div id="hora-contenedor" class="status-badge" style="display: none">
+      <i class="bi bi-clock-fill me-2"></i>
+      <span id="hora-texto">22:43:51</span>
     </div>
+  </div>
 
-    <div class="card-body p-4 text-center">
-      <div id="panel-bloqueado" class="py-4 d-none">
-        <div class="mb-3">
-          <i
-            class="bi bi-exclamation-triangle text-warning"
-            style="font-size: 3rem"
-          ></i>
-        </div>
-        <h4 class="text-warning">Acceso Restringido</h4>
-        <p class="text-secondary small">
-          Este dispositivo no se encuentra vinculado físicamente a su cuenta.
-        </p>
+  <div onclick="lectorqr.iniciarProceso()" class="btn-scan-pro">
+    <i class="bi bi-qr-code-scan"></i>
+    <span class="btn-text">Escanear Punto</span>
+  </div>
+
+  <div class="result-card shadow-sm">
+    <span class="result-label">Validación de Ubicación</span>
+    <span id="codigo-resultado" class="code-display text-muted small"
+      >ESPERANDO ESCANEO...</span
+    >
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="qrModal"
+  tabindex="-1"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold">
+          <i class="bi bi-camera-fill me-2 text-info"></i>ESCÁNER ACTIVO
+        </h6>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
-
-      <div id="panel-autorizado" class="py-2 d-none">
-        <span
-          class="badge rounded-pill bg-success px-3 py-2 mb-3"
-          style="font-size: 10px"
+      <div class="modal-body p-0">
+        <div id="reader"></div>
+      </div>
+      <div class="modal-footer border-0 justify-content-center bg-light">
+        <small class="text-secondary fw-bold"
+          >Coloque el código QR en el centro</small
         >
-          <i class="bi bi-check-circle-fill me-1"></i> HARDWARE VERIFICADO
-        </span>
-        <br />
-
-        <div class="qr-container shadow-sm mb-2">
-          <img
-            id="qr-image"
-            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=CARGANDO..."
-            alt="QR"
-            style="width: 200px; height: 200px"
-          />
-        </div>
-
-        <div class="progress-token">
-          <div id="token-bar" class="progress-token-bar"></div>
-        </div>
-        <div class="text-info small fw-bold mb-3">
-          Expira en: <span id="token-timer" class="text-white">20</span>s
-        </div>
-
-        <p class="text-info small fw-bold mt-2 mb-0 text-uppercase">
-          Token Dinámico Activo
-        </p>
-        <p class="text-secondary" style="font-size: 11px">
-          Lea el QR con la cámara de su celular para marcar su asistencia.
-        </p>
       </div>
-    </div>
-
-    <div class="card-footer bg-black text-center border-0 py-2">
-      <small class="text-secondary" style="font-size: 9px; opacity: 0.6"
-        >SISTEMA ASIST V.2026</small
-      >
     </div>
   </div>
 </div>
 
 <script>
-  var nsMarcarAsistencia = (function () {
-    let timeLeft = 30;
-    let timerInterval = null;
-    let maxTime = 30; // Para el cálculo de la barra de progreso
+  // Mantenemos tu lógica igual, solo añadimos la confirmación auditiva (beep)
+  var lectorqr = (function () {
+    let html5QrCode;
+    let isScanning = false;
+    let horaValidada = "";
+    const modalId = "qrModal";
 
-    async function obtenerNuevoToken() {
-      const qrImg = document.getElementById("qr-image");
-      const panelAutorizado = document.getElementById("panel-autorizado");
-      const panelBloqueado = document.getElementById("panel-bloqueado");
+    async function iniciarProceso() {
+      const horaLabel = document.getElementById("hora-contenedor");
+      const horaTexto = document.getElementById("hora-texto");
 
-      // SI LOS ELEMENTOS NO EXISTEN, DETENER LA EJECUCIÓN Y LIMPIAR EL TIMER
-      if (!qrImg || !panelAutorizado) {
-        //console.log("Vista de asistencia no activa. Limpiando procesos...");
-        if (timerInterval) clearInterval(timerInterval);
-        return;
-      }
-
-      // 1. Obtener la llave de hardware global
-      const resultado = await obtenerUUIDHardwareGlobal();
-      const uuidGenerado = resultado.hash;
+      horaLabel.style.display = "inline-flex";
+      // Icono de carga girando
+      horaLabel.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Sincronizando...';
 
       try {
-        const response = await fetch(
-          `${window.SUPABASE_URL}/functions/v1/asist_getToken`,
+        const resp = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/get-server-time`,
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: window.SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
-            },
-            body: JSON.stringify({
-              uuid_server: uuidGenerado,
-            }),
+            method: "GET",
+            headers: { Authorization: `Bearer ${window.SUPABASE_ANON_KEY}` },
           },
         );
+        const data = await resp.json();
 
-        const result = await response.json();
-
-        // 2. Manejo de error de dispositivo (403 o no registrado)
-        if (!response.ok || response.status === 403) {
-          clearInterval(timerInterval);
-          panelAutorizado.classList.add("d-none");
-          panelBloqueado.classList.remove("d-none");
-          console.error("Acceso denegado:", result.message || result.error);
-          return;
+        if (data.status === "success") {
+          horaValidada = data.time;
+          // Icono de check verde/cian
+          horaLabel.innerHTML = `<i class="bi bi-clock-fill me-2"></i>SINC: ${horaValidada}`;
+          abrirCamara();
         }
-
-        // 3. Éxito: Mostrar panel y cargar QR
-        if (result.token) {
-          // ACTIVAR VISTA
-          panelBloqueado.classList.add("d-none");
-          panelAutorizado.classList.remove("d-none");
-
-          qrImg.style.opacity = "0.5";
-          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${result.token}`;
-
-          qrImg.onload = () => {
-            qrImg.style.opacity = "1";
-          };
-
-          // Ajustar tiempos dinámicos
-          maxTime = result.expires_in || 30;
-          reiniciarContador(maxTime);
-        }
-      } catch (err) {
-        console.error("Error obteniendo token:", err);
-        setTimeout(obtenerNuevoToken, 5000);
+      } catch (e) {
+        // Icono de error
+        horaLabel.innerHTML =
+          '<i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>ERROR RED';
+        console.error(e);
       }
     }
 
-    function reiniciarContador(segundos) {
-      if (timerInterval) clearInterval(timerInterval);
-      timeLeft = segundos;
+    function abrirCamara() {
+      const modalElement = document.getElementById(modalId);
+      const myModal = new bootstrap.Modal(modalElement);
+      myModal.show();
 
-      actualizarInterfaz(timeLeft);
+      // Ajuste de timing para asegurar que el DOM del modal esté listo
+      setTimeout(() => {
+        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
 
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        actualizarInterfaz(timeLeft);
+        // Configuración refinada del escáner (qrbox más pequeño para PC)
+        const config = {
+          fps: 15,
+          qrbox: { width: 220, height: 220 }, // Recuadro de escaneo definido
+          aspectRatio: 1.0, // Fuerza formato cuadrado
+        };
 
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          obtenerNuevoToken();
-        }
-      }, 1000);
+        html5QrCode
+          .start(
+            { facingMode: "environment" }, // Prioriza cámara trasera en móvil
+            config,
+            (text) => {
+              // ÉXITO DE LECTURA
+              document.getElementById("codigo-resultado").innerText = text;
+
+              // --- NUEVO: Confirmación auditiva ---
+              emitirBeep();
+
+              pararTodo();
+            },
+          )
+          .then(() => {
+            isScanning = true;
+            console.log("DEBUG: Cámara iniciada correctamente.");
+          })
+          .catch((err) => {
+            console.error("DEBUG: Error al iniciar cámara:", err);
+            alert("Asegúrate de dar permisos de cámara en localhost.");
+          });
+      }, 500);
     }
 
-    function actualizarInterfaz(segundos) {
-      const bar = document.getElementById("token-bar");
-      const text = document.getElementById("token-timer");
+    function pararTodo() {
+      if (html5QrCode && isScanning) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear(); // Limpieza profunda
+          isScanning = false;
+          bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
 
-      if (text) text.innerText = segundos;
-
-      if (bar) {
-        // Cálculo basado en el tiempo máximo real (30s)
-        const porcentaje = (segundos / maxTime) * 100;
-        bar.style.width = `${porcentaje}%`;
-        bar.style.backgroundColor = segundos < 5 ? "#dc3545" : "#17a2b8";
+          // Aquí disparas tu envío final a Supabase
+          console.log("Listo para enviar:", {
+            codigo: document.getElementById("codigo-resultado").innerText,
+            hora: horaValidada,
+          });
+        });
       }
     }
 
-    async function inicializarValidacion() {
-      // Verificación rápida de UI
-      const estaVinculadoLocal = localStorage.getItem("asist_vnc");
+    // --- NUEVO: Función para generar el sonido de "Beep" ---
+    function emitirBeep() {
+      // Creamos el contexto de audio
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-      if (!estaVinculadoLocal) {
-        document.getElementById("panel-autorizado").classList.add("d-none");
-        document.getElementById("panel-bloqueado").classList.remove("d-none");
-        return;
-      }
+      // Creamos el oscilador (genera el tono)
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain(); // Controla el volumen
 
-      // Validar hardware contra servidor de inmediato
-      await obtenerNuevoToken();
+      oscillator.type = "sine"; // Tipo de onda suave
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Frecuencia (Nota A5)
+
+      // Control de volumen para que sea un "clic/beep" rápido y no molesto
+      gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioCtx.currentTime + 0.3,
+      );
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.3); // Duración de 300ms
     }
 
-    // Ejecución inicial
-    inicializarValidacion();
-
-    return { revalidar: inicializarValidacion };
+    return { iniciarProceso };
   })();
 </script>

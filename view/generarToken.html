@@ -1,0 +1,248 @@
+<style>
+  .qr-container {
+    border-radius: 12px;
+    border: 4px solid #17a2b8;
+    background: white;
+    padding: 15px;
+    display: inline-block;
+    position: relative;
+  }
+  .card-asistencia {
+    background-color: #121418 !important;
+    border-radius: 15px !important;
+    max-width: 450px;
+    margin: auto;
+  }
+  /* Barra de progreso integrada */
+  .progress-token {
+    height: 6px;
+    background-color: #333;
+    border-radius: 3px;
+    margin: 15px auto 5px auto;
+    width: 200px; /* Alineada al ancho del QR */
+    overflow: hidden;
+  }
+  .progress-token-bar {
+    height: 100%;
+    background-color: #17a2b8;
+    width: 100%;
+    transition:
+      width 1s linear,
+      background-color 0.3s ease;
+  }
+  #qr-image {
+    transition: opacity 0.3s ease;
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="card card-asistencia text-white shadow-lg border-0">
+    <div class="card-header bg-gradient-dark py-3 border-secondary text-center">
+      <h5 class="mb-0 text-uppercase tracking-wider text-info">
+        <i class="bi bi-shield-lock-fill me-2"></i>Control de Asistencia
+      </h5>
+    </div>
+
+    <div class="card-body p-4 text-center">
+      <div id="panel-bloqueado" class="py-4 d-none">
+        <div class="mb-3">
+          <i
+            class="bi bi-exclamation-triangle text-warning"
+            style="font-size: 3rem"
+          ></i>
+        </div>
+        <h4 class="text-warning">Acceso Restringido</h4>
+        <p class="text-secondary small">
+          Este dispositivo no se encuentra vinculado físicamente a su cuenta.
+        </p>
+      </div>
+
+      <div id="panel-autorizado" class="py-2 d-none">
+        <span
+          class="badge rounded-pill bg-success px-3 py-2 mb-3"
+          style="font-size: 10px"
+        >
+          <i class="bi bi-check-circle-fill me-1"></i> HARDWARE VERIFICADO
+        </span>
+        <br />
+
+        <div class="mb-3">
+          <h6
+            class="text-info mb-0 fw-bold"
+            id="info-oficina"
+            style="letter-spacing: 1px"
+          ></h6>
+        </div>
+
+        <div class="qr-container shadow-sm mb-2">
+          <img
+            id="qr-image"
+            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=CARGANDO..."
+            alt="QR"
+            style="width: 200px; height: 200px"
+          />
+        </div>
+
+        <div class="progress-token">
+          <div id="token-bar" class="progress-token-bar"></div>
+        </div>
+        <div class="text-info small fw-bold mb-3">
+          Expira en: <span id="token-timer" class="text-white">20</span>s
+        </div>
+
+        <p class="text-info small fw-bold mt-2 mb-0 text-uppercase">
+          Token Dinámico Activo
+        </p>
+        <p class="text-secondary" style="font-size: 11px">
+          Lea el QR con la cámara de su celular para marcar su asistencia.
+        </p>
+      </div>
+    </div>
+
+    <div class="card-footer bg-black text-center border-0 py-2">
+      <small class="text-secondary" style="font-size: 9px; opacity: 0.6"
+        >SISTEMA ASIST V.2026</small
+      >
+    </div>
+  </div>
+</div>
+
+<script>
+  var nsGenerarToken = (function () {
+    let timeLeft = 30;
+    let timerInterval = null;
+    let maxTime = 30;
+
+    async function obtenerNuevoToken() {
+      const qrImg = document.getElementById("qr-image");
+      const panelAutorizado = document.getElementById("panel-autorizado");
+      const panelBloqueado = document.getElementById("panel-bloqueado");
+
+      // Detener si el elemento ya no está en el DOM (Cambio de sección)
+      if (!qrImg) {
+        detenerTimer();
+        return;
+      }
+
+      try {
+        // 1. Recuperamos los "ingredientes" crudos y el ID de identidad
+        const { specs } = await obtenerUUIDHardwareGlobal();
+        const deviceId = localStorage.getItem("device_token_id");
+
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_getToken`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              device_id: deviceId, // Quién dice ser
+              hardware_specs: specs, // Prueba física de quién es
+            }),
+          },
+        );
+
+        const result = await response.json();
+
+        // 2. Si el servidor dice que no coinciden los specs o no está registrado
+        if (!response.ok) {
+          detenerTimer();
+          panelAutorizado?.classList.add("d-none");
+          panelBloqueado?.classList.remove("d-none");
+          return;
+        }
+
+        // 3. Éxito: Generar QR
+        if (result.token) {
+          panelBloqueado?.classList.add("d-none");
+          panelAutorizado?.classList.remove("d-none");
+
+          qrImg.style.opacity = "0.3";
+          // Usamos una URL más limpia para el QR
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(result.token)}`;
+
+          qrImg.onload = () => (qrImg.style.opacity = "1");
+
+          maxTime = result.expires_in || 30;
+          reiniciarContador(maxTime);
+        }
+      } catch (err) {
+        console.error("Error de conexión:", err);
+        // Reintento exponencial simple
+        setTimeout(obtenerNuevoToken, 5000);
+      }
+    }
+
+    function reiniciarContador(segundos) {
+      detenerTimer();
+      timeLeft = segundos;
+      actualizarInterfaz(timeLeft);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        actualizarInterfaz(timeLeft);
+
+        if (timeLeft <= 0) {
+          obtenerNuevoToken(); // Auto-renovar
+        }
+      }, 1000);
+    }
+
+    function detenerTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function actualizarInterfaz(segundos) {
+      const bar = document.getElementById("token-bar");
+      const text = document.getElementById("token-timer");
+
+      if (text) text.innerText = segundos;
+      if (bar) {
+        const porcentaje = (segundos / maxTime) * 100;
+        bar.style.width = `${porcentaje}%`;
+        // Cambio de color visual crítico
+        bar.style.backgroundColor = segundos <= 5 ? "#ff5f56" : "#17a2b8";
+      }
+    }
+
+    async function inicializarValidacion() {
+      const marcaVinculado = btoa("vnc_active_Dispositivo vinculado");
+      const estaVinculadoLocal = localStorage.getItem("asist_vnc");
+
+      if (estaVinculadoLocal !== marcaVinculado) {
+        document.getElementById("panel-autorizado")?.classList.add("d-none");
+        document.getElementById("panel-bloqueado")?.classList.remove("d-none");
+        return;
+      }
+
+      // --- LÓGICA PARA MOSTRAR LA OFICINA ---
+      const pdsCodigo = localStorage.getItem("pds_codigo") || "---";
+      const pdsNombre = localStorage.getItem("pds_nombre") || "Sin Nombre";
+      const contenedorOficina = document.getElementById("info-oficina");
+
+      if (contenedorOficina) {
+        contenedorOficina.innerHTML = `
+            <i class="bi bi-geo-alt-fill me-1"></i>
+            OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
+        `;
+      }
+      // --------------------------------------
+
+      await obtenerNuevoToken();
+    }
+
+    // Auto-ejecución
+    inicializarValidacion();
+
+    return {
+      revalidar: inicializarValidacion,
+      detener: detenerTimer,
+    };
+  })();
+</script>

@@ -1,8 +1,8 @@
 {
-  "name": "novaenvios",
-  "short_name": "novaenvios",
-  "start_url": "/novaenvios/",
-  "scope": "/novaenvios/",
+  "name": "asist",
+  "short_name": "asist",
+  "start_url": "/asist/",
+  "scope": "/asist/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0d6efd",

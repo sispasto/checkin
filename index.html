@@ -22,11 +22,7 @@
     <!-- Estilos personalizados -->
     <link rel="stylesheet" href="css/home.css" />
     <link rel="stylesheet" href="css/loader.css" />
-    <link
-      rel="icon"
-      href="/novaenvios/assets/favicon.ico"
-      type="image/x-icon"
-    />
+    <link rel="icon" href="/asist/assets/favicon.ico" type="image/x-icon" />
 
     <!-- Bootstrap JS bundle (incluye Popper) -->
     <script
@@ -34,6 +30,9 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+
+    <!--Libreria de QR-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <!--Supabase-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -44,6 +43,86 @@
   </head>
 
   <body>
+    <div
+      id="pwa-blocker"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(240, 242, 245, 0.98);
+        z-index: 20000;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+      "
+    >
+      <div
+        style="
+          background: white;
+          padding: 2rem;
+          border-radius: 20px;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+          max-width: 450px;
+          width: 100%;
+          border: 1px solid #dee2e6;
+          text-align: center;
+        "
+      >
+        <h2 style="font-weight: 700; color: #343a40; margin-bottom: 1rem">
+          ⚠️ Acción Requerida
+        </h2>
+        <p>
+          Para garantizar la seguridad de tu registro, esta aplicación
+          <b>debe estar instalada.</b>
+        </p>
+
+        <div
+          style="
+            background: #fff9db;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid #ffe066;
+            color: #856404;
+            text-align: left;
+          "
+        >
+          <h6 style="font-weight: bold; margin-bottom: 10px">
+            ¿Cómo instalar?
+          </h6>
+          <ul
+            style="
+              font-size: 0.85rem;
+              margin-bottom: 0;
+              list-style: none;
+              padding-left: 0;
+            "
+          >
+            <li style="margin-bottom: 8px">
+              <b>En Android:</b> Toca ⋮ y selecciona "Instalar aplicación".
+            </li>
+            <li style="margin-bottom: 8px">
+              <b>En iPhone:</b> Toca ⎋ y "Añadir a pantalla de inicio".
+            </li>
+            <li style="margin-bottom: 0">
+              <b>En PC:</b> Haz clic en el icono de instalar
+              <i class="bi bi-plus-circle"></i> en la barra de direcciones.
+            </li>
+          </ul>
+        </div>
+
+        <button
+          class="btn btn-primary mt-3 w-100 fw-bold"
+          onclick="window.location.reload()"
+          style="padding: 12px; border-radius: 10px"
+        >
+          <i class="bi bi-arrow-clockwise"></i> Ya la instalé, verificar
+        </button>
+      </div>
+    </div>
     <section id="header">
       <nav class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
@@ -218,7 +297,7 @@
 
     <script>
       window.SUPABASE_URL = "https://pmbxyfketmuzocepllvf.supabase.co";
-      const SUPABASE_ANON_KEY =
+      window.SUPABASE_ANON_KEY =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtYnh5ZmtldG11em9jZXBsbHZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3ODE4NjUsImV4cCI6MjA3MzM1Nzg2NX0.oh9zssayvCPp-jcCohQugTx28Ds2Ts-y7Tbp-pgX1XE";
       window.supabaseClient = supabase.createClient(
         SUPABASE_URL,
@@ -304,6 +383,11 @@
       // LOGIN
       // ============================
       async function authenticateUser() {
+        // 1. Detectar PWA
+        const isPWA =
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone;
+
         const usuario = document.getElementById("username").value.trim();
         const clave = document.getElementById("password").value.trim();
 
@@ -313,9 +397,11 @@
         }
 
         try {
-          // 1. Llamada directa a la Edge Function (Sin pasar por supabase.auth)
+          const resultado = await obtenerUUIDHardwareGlobal();
+          const caracteristicas = resultado.specs;
+
           const response = await fetch(
-            `${window.SUPABASE_URL}/functions/v1/asist_authUser`, // Usamos el nombre de tu nueva función
+            `${window.SUPABASE_URL}/functions/v1/asist_authUser`,
             {
               method: "POST",
               headers: {
@@ -327,6 +413,8 @@
                 action: "login",
                 usuario: usuario,
                 clave: clave,
+                hardware_fingerprint: caracteristicas,
+                is_pwa: !!isPWA,
               }),
             },
           );
@@ -334,31 +422,49 @@
           const data = await response.json();
 
           if (data.status === "success") {
-            // Extraemos los datos según los campos de tus tablas asist_personas y asist_usuario
             const { nombre, rol, persona_id, codigo } = data;
 
-            // Habilitar Menú
             NovaMenu.mostrarMenuPorRol(rol, nombre);
-
-            // GUARDAR DATOS EN SESSION PARA EL MVP
             sessionStorage.setItem("nombreUsuario", nombre);
             sessionStorage.setItem("userRol", rol);
             sessionStorage.setItem("personaId", persona_id || "");
-            sessionStorage.setItem("codigoUsuario", codigo || ""); // Guardamos el código de la tabla asist_usuario
+            sessionStorage.setItem("codigoUsuario", codigo || "");
 
-            // Cerrar modal y limpiar interfaz
             safeHideModal("loginModal");
             document.getElementById("textUser").textContent = nombre;
 
             if (typeof getHome === "function") getHome();
             alertSMS("Bienvenido " + nombre);
           } else {
-            // Si la función devuelve error (usuario/clave incorrectos)
-            alertSMS(data.error || "Error al iniciar sesión");
+            // --- MANEJO DE ERRORES DESDE LA EDGE FUNCTION ---
+
+            // Si el error es específicamente por la PWA (errorCode: "PWA_REQUIRED")
+            if (data.errorCode === "PWA_REQUIRED") {
+              alertSMS("📲 " + data.message); // Muestra: Seguridad: Debe instalar la App...
+
+              // Opcional: Mostrar el bloqueador visual si no se activó antes
+              const pwaBlocker = document.getElementById("pwa-blocker");
+              if (pwaBlocker) pwaBlocker.style.display = "flex";
+            } else if (data.errorCode === "DEVICE_MISMATCH") {
+              alertSMS("⚠️ Bloqueo: " + data.message);
+            } else if (data.errorCode === "DEVICE_NOT_FOUND") {
+              alertSMS("📱 " + data.message);
+            } else if (data.errorCode === "AUTH_FAILED") {
+              alertSMS("🔑 Código o clave incorrectos.");
+            } else if (data.errorCode === "DEVICE_DISABLED") {
+              alertSMS("🚫 Dispositivo desactivado por administración.");
+            } else {
+              // Para cualquier otro error (como HARDWARE_DATA_MISSING o INVALID_ACTION)
+              alertSMS(
+                "❌ " + (data.message || data.errorCode || "Error de acceso"),
+              );
+            }
           }
         } catch (err) {
           console.error("Error en la conexión:", err);
-          alertSMS("No se pudo conectar con el servidor");
+          alertSMS(
+            "Error de red: No se pudo conectar con el servidor de seguridad.",
+          );
         }
       }
 
@@ -396,7 +502,7 @@
           // 3. Llamada a la Edge Function
           // Dentro de tu función updatePassword() en el HTML:
           const response = await fetch(
-            `${SUPABASE_URL}/functions/v1/novaenvios_authUser`,
+            `${SUPABASE_URL}/functions/v1/asist_authUser`,
             {
               method: "POST",
               headers: {
@@ -486,12 +592,26 @@
 
     <script>
       window.addEventListener("load", async () => {
-        // 🔹 Verificar sesión al cargar la página
+        // --- NUEVA LÓGICA DE BLOQUEO PWA ---
+        const isPWA =
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone;
+        const pwaBlocker = document.getElementById("pwa-blocker");
+
+        if (!isPWA) {
+          // Si NO es PWA, mostramos el bloqueador
+          pwaBlocker.style.display = "flex";
+          // Opcional: Detenemos la ejecución del resto para mayor seguridad
+          return;
+        }
+        // -----------------------------------
+
+        // Verificar sesión si es PWA
         if (typeof verificarSesion === "function") {
           await verificarSesion();
         }
 
-        // 🔹 Registrar Service Worker
+        // Registrar Service Worker
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker
             .register("./service-worker.js")

@@ -1,23 +1,48 @@
 export const MENUS = {
   // MENU POR DEFECTO (INVITADO)
-  DEFAULT: `
-    <ul class="navbar-nav flex-grow-1 pe-3">
-      <li class="nav-item">
-        <a class="nav-link active" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
-          <i class="bi bi-house"></i> Inicio
-        </a>
-      </li>
+  // MENU POR DEFECTO (Dinámico según vinculación)
+  DEFAULT: () => {
+    const marcaVinculado = btoa("vnc_active_Dispositivo vinculado");
+    const estaVinculado = localStorage.getItem("asist_vnc") === marcaVinculado;
+
+    // Obtenemos el tipo de Hardware (leído como string del localStorage)
+    // Si es "false" -> Es PC/Servidor
+    // Si es "true" -> Es Celular
+    const esCelular = localStorage.getItem("tipoHW") === "true";
+
+    // Item de autenticación (siempre visible)
+    const itemAutenticar = `
       <li class="nav-item">
         <a class="nav-link" href="#" onclick="showLoginModal()">
           <i class="bi bi-person-lock"></i> Autenticarse
         </a>
-      </li>
+      </li>`;
+
+    /** * Lógica del Item QR:
+     * 1. Debe estar vinculado (estaVinculado)
+     * 2. NO debe ser celular (!esCelular), es decir, debe ser Servidor (tipoHW: false)
+     */
+    const itemQR =
+      estaVinculado && !esCelular
+        ? `
       <li class="nav-item">
-        <a class="nav-link" href="#" onclick="marcarAsistencia()">
-          <i class="bi bi-person-lock"></i> Marcar Asistencia
+        <a class="nav-link" href="#" onclick="generarToken()">
+          <i class="bi bi-qr-code-scan"></i> Generar QR para Asistencia
         </a>
-      </li>
-    </ul>`,
+      </li>`
+        : "";
+
+    return `
+      <ul class="navbar-nav flex-grow-1 pe-3">
+        <li class="nav-item">
+          <a class="nav-link active" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
+            <i class="bi bi-house"></i> Inicio
+          </a>
+        </li>
+        ${itemAutenticar}
+        ${itemQR}
+      </ul>`;
+  },
 
   // ROL EMPRESA
   EMPRESA: `
@@ -28,8 +53,8 @@ export const MENUS = {
         </a>
       </li>
       <li class="nav-item mb-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarDispositivo)">
-          <i class="bi bi-people"></i> <span>Registrar dispositivo</span>
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
+          <i class="bi bi-people"></i> <span>Registrar servidor</span>
         </a>
       </li>
 
@@ -104,8 +129,13 @@ export const MENUS = {
         </a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getPlanillasMensajero)">
-          <i class="bi bi-search"></i> <span>Consultar Planillas</span>
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarTerminal)">
+          <i class="bi bi-search"></i> <span>Registrar celular</span>
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(marcarAsistencia)">
+          <i class="bi bi-search"></i> <span>Registrar Asistencia</span>
         </a>
       </li>
       <li class="nav-item mt-4 border-top border-secondary pt-3">
@@ -241,7 +271,7 @@ const MenuManager = {
       tituloMenu.style.letterSpacing = "1px";
     }
 
-    if (contenedor) contenedor.innerHTML = MENUS.DEFAULT;
+    if (contenedor) contenedor.innerHTML = MENUS.DEFAULT();
 
     const textUser = document.getElementById("textUser");
     if (textUser) {

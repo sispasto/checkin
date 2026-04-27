@@ -6,67 +6,97 @@ let swRegistration = null; // 🔥 referencia global
 let intervalSW = null;
 let newVersionAvailable = null;
 
-function registrarDispositivo() {
-  let main = document.getElementById("App");
-  removeALLChilds(main);
-  const registroDispositivo = document.createElement("registrar-dispositivo");
-  registroDispositivo.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
-  main.appendChild(registroDispositivo);
-}
-
 // main.js - Función Global de Identificación de Hardware
 async function obtenerUUIDHardwareGlobal() {
   const specs = {};
   try {
-    // 1. GPU
+    // 1. Recolección de GPU
     const canvasGL = document.createElement("canvas");
     const gl =
       canvasGL.getContext("webgl") || canvasGL.getContext("experimental-webgl");
+
     if (gl) {
       const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
       specs.gpu = debugInfo
         ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
         : "Generic GPU";
+    } else {
+      specs.gpu = "Not Supported";
     }
 
-    // 2. Hardware Fijo
+    // 2. Hardware y Pantalla
     specs.cores = navigator.hardwareConcurrency || "N/A";
     specs.memory = navigator.deviceMemory
-      ? navigator.deviceMemory + "GB"
+      ? `${navigator.deviceMemory}GB`
       : "N/A";
     specs.screen = `${window.screen.width}x${window.screen.height}`;
     specs.pixel_ratio = Math.round(window.devicePixelRatio || 1);
     specs.langs = navigator.language;
+    specs.platform = navigator.platform;
 
-    // 3. Canvas DNA
+    // 3. Generación de Canvas DNA (Huella gráfica de renderizado)
     const canvas2D = document.createElement("canvas");
     const ctx = canvas2D.getContext("2d");
     canvas2D.width = 200;
     canvas2D.height = 40;
+
     ctx.textBaseline = "top";
     ctx.font = "14px 'Arial'";
     ctx.fillStyle = "#f60";
     ctx.fillRect(10, 10, 50, 10);
     ctx.fillStyle = "#069";
     ctx.fillText("ASIST-2026-FIXED", 15, 12);
+
+    // Guardamos la representación visual como base64
     specs.canvas_dna = canvas2D.toDataURL();
 
-    // 4. Generar Hash SHA-256
-    const msgUint8 = new TextEncoder().encode(JSON.stringify(specs));
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    // 4. Retorno puro de specs
     return {
-      hash: "HW-" + hashHex,
-      specs: specs, // Devolvemos los specs por si la UI los necesita mostrar
+      status: "ready",
+      specs: specs,
     };
   } catch (e) {
-    console.error("Error identificando hardware:", e);
-    return { hash: "ERROR_DNA", specs: {} };
+    console.error("Error recolectando ingredientes de hardware:", e);
+    return {
+      status: "error",
+      specs: null,
+      message: e.message,
+    };
   }
+}
+
+function registrarServidor() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const registroServidor = document.createElement("registrar-servidor");
+  registroServidor.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(registroServidor);
+}
+
+function registrarTerminal() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const registroTerminal = document.createElement("registrar-terminal");
+  registroTerminal.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(registroTerminal);
+}
+
+function generarToken() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const frmGenerarToken = document.createElement("generar-token-component");
+  frmGenerarToken.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(frmGenerarToken);
+}
+
+function marcarAsistencia() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const frmMarcarAsistencia = document.createElement(
+    "marcar-asistencia-component",
+  );
+  frmMarcarAsistencia.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(frmMarcarAsistencia);
 }
 
 function crearPlanilla() {
@@ -99,16 +129,6 @@ function getPlanillasMensajero() {
   const frmPlanillasMensajero = document.createElement("planillas-mensajero");
   frmPlanillasMensajero.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
   main.appendChild(frmPlanillasMensajero);
-}
-
-function marcarAsistencia() {
-  let main = document.getElementById("App");
-  removeALLChilds(main);
-  const frmMarcarAsistencia = document.createElement(
-    "marcar-asistencia-component",
-  );
-  frmMarcarAsistencia.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
-  main.appendChild(frmMarcarAsistencia);
 }
 
 function consultarPlanillas() {
@@ -242,7 +262,7 @@ function iniciarAutoUpdateSW() {
 
   intervalSW = setInterval(() => {
     if (swRegistration) {
-      console.log("🔄 Buscando actualización del SW...");
+      //console.log("🔄 Buscando actualización del SW...");
       swRegistration.update();
     }
   }, 300000); // detecta versiones cada 30 minutos (1800000 ms) 30segundos 300000
@@ -315,7 +335,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // 🔥 si ya hay una versión en espera
         if (reg.waiting && navigator.serviceWorker.controller) {
-          console.log("SW ya estaba esperando");
+          //console.log("SW ya estaba esperando");
           mostrarBotonActualizacion();
         }
 
@@ -349,7 +369,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (swRegistration && swRegistration.waiting) {
           // 🔥 nueva versión (NO aplicar aún)
           newVersionAvailable = event.data.version;
-          console.log("Nueva versión detectada:", newVersionAvailable);
+          //console.log("Nueva versión detectada:", newVersionAvailable);
           mostrarBotonActualizacion();
         } else {
           // 🔥 versión actual activa
@@ -374,7 +394,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         if (swRegistration) {
-          console.log("Validando actualizaciones...");
+          //console.log("Validando actualizaciones...");
           swRegistration.update();
         }
       }
