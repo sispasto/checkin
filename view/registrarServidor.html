@@ -386,6 +386,9 @@
 
         if (response.ok && result.status === "success") {
           localStorage.setItem("device_token_id", result.device_token_id || "");
+          localStorage.setItem("pds_codigo", result.codigo_pds || "");
+          localStorage.setItem("pds_nombre", result.nombre_pds || "");
+
           localStorage.setItem(
             "asist_vnc",
             btoa("vnc_active_Dispositivo vinculado"),
