@@ -56,57 +56,7 @@ export const MENUS = {
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
           <i class="bi bi-people"></i> <span>Registrar servidor</span>
         </a>
-      </li>
-
-      <li class="nav-item menu-section">
-        <a class="nav-link section-header d-flex justify-content-between align-items-center" 
-          href="javascript:void(0)" onclick="NovaMenu.toggleSubMenu('catOperaciones', event)">
-          <span class="d-flex align-items-center gap-2">
-            <i class="bi bi-truck"></i> Gestión de Rutas
-          </span>
-          <i class="bi bi-chevron-right chevron-icon" style="font-size: 0.7rem;"></i>
-        </a>
-        <div class="collapse" id="catOperaciones">
-          <ul class="list-unstyled submenu-list ms-3 border-start border-secondary-subtle">
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(crearPlanilla)">Crear Planilla</a></li>
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(consultarPlanilla)">Consultar Planilla</a></li>
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(consultarPlanillas)">Consultar Planillas</a></li>
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(excluirGuias)">Excluir Guías</a></li>
-          </ul>
-        </div>
-      </li>
-
-      <li class="nav-item menu-section mt-2">
-        <a class="nav-link section-header d-flex justify-content-between align-items-center" 
-          href="javascript:void(0)" onclick="NovaMenu.toggleSubMenu('catDevoluciones', event)">
-          <span class="d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-left-right"></i> Devoluciones
-          </span>
-          <i class="bi bi-chevron-right chevron-icon" style="font-size: 0.7rem;"></i>
-        </a>
-        <div class="collapse" id="catDevoluciones">
-          <ul class="list-unstyled submenu-list ms-3 border-start border-secondary-subtle">
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(crearPlanillaDevolucion)">Crear Planilla</a></li>
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(entregarDevoluciones)">Entregar Planilla</a></li>
-          </ul>
-        </div>
-      </li>
-
-      <li class="nav-item menu-section mt-2">
-        <a class="nav-link section-header d-flex justify-content-between align-items-center" 
-          href="javascript:void(0)" onclick="NovaMenu.toggleSubMenu('catCierre', event)">
-          <span class="d-flex align-items-center gap-2">
-            <i class="bi bi-check2-circle"></i> Cierres y Control
-          </span>
-          <i class="bi bi-chevron-right chevron-icon" style="font-size: 0.7rem;"></i>
-        </a>
-        <div class="collapse" id="catCierre">
-          <ul class="list-unstyled submenu-list ms-3 border-start border-secondary-subtle">
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(cerrarPlanilla)">Cierre de planilla</a></li>
-            <li><a class="nav-link text-danger-emphasis" href="#" onclick="NovaMenu.ejecutarAccion(anularPlanilla)">Anular Planilla</a></li>
-          </ul>
-        </div>
-      </li>
+      </li>     
 
       <li class="nav-item mt-4 border-top border-secondary pt-3">
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(showChangePasswordModal)">
