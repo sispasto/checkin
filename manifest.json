@@ -1,8 +1,8 @@
 {
-  "name": "asist",
-  "short_name": "asist",
-  "start_url": "/asist/",
-  "scope": "/asist/",
+  "name": "checkin",
+  "short_name": "checkin",
+  "start_url": "/checkin/",
+  "scope": "/checkin/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0d6efd",
