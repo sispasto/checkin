@@ -320,8 +320,17 @@
           const idGuardado =
             localStorage.getItem("device_token_id") || "VNC-ACTIVE";
           setTimeout(() => {
-            if (display)
-              display.value = `SISTEMA VINCULADO\nID: ${idGuardado}\nLAT: ${coordenadas?.latitud || "N/A"}`;
+            if (display) {
+              // Agregamos la longitud y un formato más limpio
+              const lat = coordenadas?.latitud
+                ? coordenadas.latitud.toFixed(6)
+                : "N/A";
+              const lon = coordenadas?.longitud
+                ? coordenadas.longitud.toFixed(6)
+                : "N/A";
+
+              display.value = `SISTEMA VINCULADO\nID: ${idGuardado}\nLAT: ${lat}\nLON: ${lon}`;
+            }
             if (bar) bar.style.width = "0%";
             if (btn) {
               btn.disabled = true;
