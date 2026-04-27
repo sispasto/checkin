@@ -272,7 +272,7 @@
 
     async function enviarAsistenciaAServidor(qrContentPDS) {
       const codigoUsuario = sessionStorage.getItem("codigoUsuario");
-      const deviceTokenId = sessionStorage.getItem("device_token_id"); // El ID de la tabla asist_terminal
+      const deviceTokenId = localStorage.getItem("device_token_id");  // El ID de la tabla asist_terminal
 
       // 1. Obtener specs para generar el Hash de seguridad en el servidor
       const resultadoHardware = await obtenerUUIDHardwareGlobal();
