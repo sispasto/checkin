@@ -90,6 +90,55 @@
     box-shadow: 0 8px 20px rgba(0, 242, 255, 0.3);
     font-family: "JetBrains Mono", monospace;
   }
+
+  .ticket-container {
+    background: #f8f9fa;
+    border-left: 5px solid #00f2ff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin: 20px auto;
+    max-width: 320px;
+    animation: slideUp 0.4s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .ticket-header {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #6c757d;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .ticket-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+
+  .ticket-item .label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+  }
+
+  .ticket-item .value {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    color: #1a1d21;
+    font-size: 0.95rem;
+  }
 </style>
 
 <div class="view-container">
@@ -111,6 +160,24 @@
     <span id="codigo-resultado" class="code-display text-muted small"
       >ESPERANDO ESCANEO...</span
     >
+  </div>
+
+  <div
+    id="ticket-asistencia"
+    class="ticket-container shadow-sm"
+    style="display: none"
+  >
+    <div class="ticket-header">REGISTRO EXITOSO</div>
+    <div class="ticket-body">
+      <div class="ticket-item">
+        <span class="label">FECHA:</span>
+        <span id="res-fecha" class="value">--/--/--</span>
+      </div>
+      <div class="ticket-item">
+        <span class="label">HORA:</span>
+        <span id="res-hora" class="value">00:00:00</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -275,10 +342,27 @@
             const data = await response.json();
 
             if (data.status === "success") {
-              alertSMS("✅ ¡Asistencia Exitosa! " + data.message);
+              alertSMS("✅ ¡Asistencia Exitosa!");
+
+              // --- MOSTRAR TICKET DE MARCACIÓN ---
+              document.getElementById("res-fecha").innerText = data.fecha;
+              document.getElementById("res-hora").innerText = data.hora;
+              document.getElementById("ticket-asistencia").style.display =
+                "block";
+
+              // Opcional: Actualizar el label de validación
+              document.getElementById("codigo-resultado").innerText =
+                "REGISTRO CONFIRMADO";
+              document
+                .getElementById("codigo-resultado")
+                .classList.replace("text-muted", "text-success");
             } else {
+              // Si hay error, ocultamos el ticket por si había uno previo
+              document.getElementById("ticket-asistencia").style.display =
+                "none";
               alertSMS("❌ Error: " + (data.message || data.errorCode));
             }
+            //fin de success
           } catch (error) {
             console.error("Error en la petición:", error);
             alertSMS("Error de red: No se pudo conectar con el servidor.");

@@ -166,7 +166,7 @@
 
           qrImg.onload = () => (qrImg.style.opacity = "1");
 
-          maxTime = result.expires_in || 30;
+          maxTime = result.expires_in || 40;
           reiniciarContador(maxTime);
         }
       } catch (err) {
