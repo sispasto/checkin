@@ -365,10 +365,12 @@
             //fin de success
           } catch (error) {
             console.error("Error en la petición:", error);
+            document.getElementById("ticket-asistencia").style.display = "none";
             alertSMS("Error de red: No se pudo conectar con el servidor.");
           }
         },
         (error) => {
+          document.getElementById("ticket-asistencia").style.display = "none";
           alertSMS("⚠️ Error: El GPS es obligatorio para marcar asistencia.");
         },
         {
