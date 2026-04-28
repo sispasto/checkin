@@ -236,7 +236,7 @@ function removeALLChilds(parentNode) {
   }
 }
 
-function alertSMS(texto, duracion = 5000) {
+function alertSMS(texto, duracion = 10000) {
   // Por defecto 5 segundos
   const myToast = document.getElementById("liveToast");
   const smsToast = myToast.querySelector(".toast-body");
