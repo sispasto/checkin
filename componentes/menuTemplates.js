@@ -153,7 +153,7 @@ export const MENUS = {
 };
 
 const MenuManager = {
-  // CORRECCIÓN: Definición limpia de funciones sin prefijos
+  // Manejo de submenús dentro del Offcanvas
   toggleSubMenu: (id, event) => {
     if (event) {
       event.stopPropagation();
@@ -166,6 +166,7 @@ const MenuManager = {
     }
   },
 
+  // Ejecuta la acción y cierra el menú lateral
   ejecutarAccion: (callback) => {
     if (typeof callback === "function") callback();
     const el = document.getElementById("offcanvasDarkNavbar");
@@ -173,31 +174,37 @@ const MenuManager = {
     if (instance) instance.hide();
   },
 
+  // Método principal para renderizar el menú por ROL
   mostrarMenuPorRol: (rol, nombreUsuario = "") => {
     const contenedor = document.querySelector(
       "#offcanvasDarkNavbar .offcanvas-body",
     );
     const tituloMenu = document.getElementById("offcanvasDarkNavbarLabel");
-    const textUser = document.getElementById("textUser"); // <--- Seleccionamos el elemento del navbar
+    const textUser = document.getElementById("textUser");
 
     if (!contenedor) return;
 
-    // 1. Actualizar el Navbar Brand (el que querías editar)
+    // 1. Actualizar el Navbar Brand (Texto visible junto al botón de menú)
     if (textUser) {
-      // Si hay nombre lo ponemos, si no, dejamos el nombre de la app
-      textUser.textContent = nombreUsuario || "";
       textUser.innerHTML = `<i class="bi bi-person-circle me-2"></i> ${nombreUsuario.toUpperCase()}`;
-      textUser.style.fontSize = "1.1rem";
-      textUser.style.letterSpacing = "1px";
+
+      // --- PREVENCIÓN DE DESBORDE ---
+      textUser.style.fontSize = "0.95rem"; // Tamaño sutilmente más pequeño
+      textUser.style.maxWidth = "160px"; // Límite de ancho para no empujar el botón
+      textUser.style.whiteSpace = "nowrap"; // Prohibir saltos de línea
+      textUser.style.overflow = "hidden"; // Ocultar lo que exceda el ancho
+      textUser.style.textOverflow = "ellipsis"; // Agregar "..." si es muy largo
+      textUser.style.display = "inline-block"; // Necesario para que maxWidth funcione
+      textUser.style.verticalAlign = "middle";
+      textUser.style.letterSpacing = "0.5px";
     }
 
-    // 2. Actualizar el título interno del Offcanvas (opcional, por estética)
-
-    // En mostrarMenuPorRol:
+    // 2. Actualizar el título interno del Offcanvas (Cuando el menú ya está abierto)
     if (tituloMenu) {
       tituloMenu.innerHTML = `<i class="bi bi-person-circle me-2"></i> ${nombreUsuario.toUpperCase()}`;
       tituloMenu.style.fontSize = "1.1rem";
       tituloMenu.style.letterSpacing = "1px";
+      // Aquí no limitamos el ancho porque hay espacio de sobra
     }
 
     // 3. Inyectar el HTML del menú según el rol
@@ -208,27 +215,25 @@ const MenuManager = {
     else MenuManager.mostrarMenuInvitado();
   },
 
+  // Método para el estado inicial o cerrar sesión
   mostrarMenuInvitado: () => {
     const contenedor = document.querySelector(
       "#offcanvasDarkNavbar .offcanvas-body",
     );
-
     const tituloMenu = document.getElementById("offcanvasDarkNavbarLabel");
+    const textUser = document.getElementById("textUser");
 
     if (tituloMenu) {
-      tituloMenu.innerHTML = `<i class="bi bi-person-circle me-2"></i> ASIST`;
-      tituloMenu.style.fontSize = "1.1rem";
-      tituloMenu.style.letterSpacing = "1px";
+      tituloMenu.innerHTML = `<i class="bi bi-building-fill me-2"></i> ASIST`;
+      tituloMenu.style.fontSize = "1rem";
     }
 
     if (contenedor) contenedor.innerHTML = MENUS.DEFAULT();
 
-    const textUser = document.getElementById("textUser");
     if (textUser) {
-      // Si hay nombre lo ponemos, si no, dejamos el nombre de la app
       textUser.innerHTML = `<i class="bi bi-building-fill me-2"></i> ASIST`;
-      textUser.style.fontSize = "1.1rem";
-      textUser.style.letterSpacing = "1px";
+      textUser.style.fontSize = "1rem";
+      textUser.style.maxWidth = "none"; // Sin límite para el nombre de la app
     }
   },
 };
