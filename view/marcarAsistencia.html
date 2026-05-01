@@ -342,6 +342,7 @@
         // --- VALIDACIÓN DE UBICACIÓN ---
         // Verificamos si loc existe y si contiene las propiedades necesarias
         if (!loc || !loc.latitud || !loc.longitud) {
+          document.getElementById("ticket-asistencia").style.display = "none";
           alertSMS(
             "❌ Error: No se pudo obtener la ubicación. Asegúrate de tener el GPS encendido.",
           );
@@ -390,7 +391,6 @@
       } catch (error) {
         console.error("Error en la petición:", error);
         document.getElementById("ticket-asistencia").style.display = "none";
-
         // Si el error viene específicamente de obtenerUbicacion(), lo manejamos aquí también
         alertSMS("Error de red o permisos: No se pudo completar la operación.");
       }
