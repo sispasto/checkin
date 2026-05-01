@@ -170,8 +170,7 @@
           reiniciarContador(maxTime);
         }
       } catch (err) {
-        console.error("Error de conexión:", err);
-        // Reintento exponencial simple
+        console.error("Error de conexión:", err); // Reintento exponencial simple
         setTimeout(obtenerNuevoToken, 5000);
       }
     }

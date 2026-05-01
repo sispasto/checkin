@@ -208,6 +208,19 @@
     let caracteristicas = null;
     let uuidVisualTerminal = "";
 
+    function urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding)
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
     async function iniciarGeneracion() {
       const display = document.getElementById("uuid_display");
       const bar = document.getElementById("scan-bar");
@@ -290,8 +303,6 @@
       event.preventDefault();
       const btn = document.getElementById("btnGuardar");
 
-      // Captura de nuevos campos
-
       if (!caracteristicas) {
         alertSMS("Error: No se detectaron componentes de hardware.");
         return;
@@ -302,6 +313,26 @@
       try {
         const user = sessionStorage.getItem("codigoUsuario");
         if (!user) throw new Error("Sesión no válida");
+
+        // --- 🔔 NUEVO: GENERAR SUSCRIPCIÓN PUSH ---
+        let suscripcionPush = null;
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          // Reemplaza 'TU_LLAVE_PUBLICA_VAPID' con tu llave real
+          suscripcionPush = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(
+              "BLSqiNPPi2a_AbKiDtXEJc-NQfj7X1FxRn694aahQJ4-aTLUcqmsDUVDOmeHKMKaIio9mPJ0hh2pGKu5OkRIubY",
+            ),
+          });
+          //console.log("Suscripción Push generada con éxito");
+        } catch (pushErr) {
+          /*console.warn(
+            "No se pudo suscribir a Push (posiblemente denegado):",
+            pushErr,
+          );*/
+          // No bloqueamos el registro si falla el push, pero avisamos en consola
+        }
 
         const currentClientID = localStorage.getItem("device_token_id");
 
@@ -318,6 +349,7 @@
               user: user,
               device_id: currentClientID,
               hardware_fingerprint: caracteristicas,
+              push_subscription: suscripcionPush, // 🔥 ENVIAMOS EL OBJETO JSON AL SERVER
             }),
           },
         );
@@ -325,24 +357,20 @@
         const result = await response.json();
 
         if (response.ok && result.status === "success") {
-          // 1. Guardar el ID del dispositivo
           if (result.device_token_id) {
             localStorage.setItem("device_token_id", result.device_token_id);
+            // 🔑 TU ARMA SECRETA: Guardar en IndexedDB para el Service Worker
+            await autorizarComoAdmin(result.device_token_id);
           }
 
-          // Esta es la ganadora para tu caso
-          if (result.tipoHW !== undefined && result.tipoHW !== null) {
+          if (result.tipoHW !== undefined) {
             localStorage.setItem("tipoHW", result.tipoHW);
           }
 
-          // 3. Marca de vinculación para la interfaz
           const marcaExito = btoa("vnc_active_Dispositivo vinculado");
           localStorage.setItem("asist_vnc", marcaExito);
 
           alertSMS("Dispositivo vinculado correctamente ✅");
-
-          // Recargar para que los cambios surtan efecto en la UI
-          //setTimeout(() => location.reload(), 1000);
           getHome();
         } else {
           throw new Error(result.error || "Error en el servidor");

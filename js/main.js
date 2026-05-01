@@ -5,6 +5,82 @@ var versionApp = localStorage.getItem("app_version") || ""; //La version se debe
 let swRegistration = null; // 🔥 referencia global
 let intervalSW = null;
 let newVersionAvailable = null;
+//Para Notificaciones push
+const VAPID_PUBLIC_KEY = "TU_LLAVE_PUBLICA_VAPID_AQUI";
+const DB_NAME = "AsistenciaDB";
+const STORE_NAME = "configuracion";
+
+/* =========================
+   GESTIÓN DE PUSH Y INDEXEDDB
+========================= */
+
+// Asegura que la DB y el Almacén existan
+function inicializarIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e);
+  });
+}
+
+// Guarda el UUID en IndexedDB (Solo lo llamas en la terminal del ADMIN)
+async function autorizarComoAdmin(uuid) {
+  await inicializarIndexedDB();
+  const db = await new Promise((res) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onsuccess = (e) => res(e.target.result);
+  });
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  tx.objectStore(STORE_NAME).put(uuid, "uuid_cliente");
+  console.log("Terminal autorizada localmente como Admin.");
+}
+
+// Activa el Push Manager del navegador
+async function suscribirDispositivoAPush() {
+  try {
+    if (!swRegistration) return;
+
+    // Pedir permiso al usuario
+    const permiso = await Notification.requestPermission();
+    if (permiso !== "granted") {
+      console.warn("Permiso de notificaciones denegado");
+      return;
+    }
+
+    // Suscribir al servidor de Push
+    const subscription = await swRegistration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+
+    console.log("Suscripción exitosa:", subscription);
+
+    // Aquí enviarías 'subscription' a tu tabla 'asist_terminal' de Supabase
+    // junto con el uuid_cliente para que el servidor sepa a quién enviarle.
+    return subscription;
+  } catch (error) {
+    console.error("Error al suscribir al Push:", error);
+  }
+}
+
+// Función auxiliar para convertir la llave VAPID
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+/***************************************************/
 
 // main.js - Función Global de Identificación de Hardware
 async function obtenerUUIDHardwareGlobal() {
@@ -314,6 +390,9 @@ function mostrarBotonActualizacion() {
    INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", async function () {
+  // Inicializamos la DB al arrancar para que el SW no falle al intentar abrirla
+  inicializarIndexedDB().catch(console.error);
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./service-worker.js", {

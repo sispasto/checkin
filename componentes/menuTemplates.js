@@ -44,34 +44,8 @@ export const MENUS = {
       </ul>`;
   },
 
-  // ROL EMPRESA
-  EMPRESA: `
-    <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
-      <li class="nav-item mb-2">
-        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
-          <i class="bi bi-house-door text-primary"></i> <span>Inicio</span>
-        </a>
-      </li>
-      <li class="nav-item mb-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
-          <i class="bi bi-people"></i> <span>Registrar servidor</span>
-        </a>
-      </li>     
-
-      <li class="nav-item mt-4 border-top border-secondary pt-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(showChangePasswordModal)">
-          <i class="bi bi-shield-lock"></i> Seguridad
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-danger d-flex align-items-center gap-2" href="#" onclick="logout()">
-          <i class="bi bi-power"></i> <span>Finalizar Sesión</span>
-        </a>
-      </li>
-    </ul>`,
-
-  // ROL MENSAJERO
-  MENSAJERO: `
+  // ROL PROMOTOR
+  PROMOTOR: `
     <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
       <li class="nav-item mb-2">
         <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
@@ -100,53 +74,54 @@ export const MENUS = {
       </li>
     </ul>`,
 
+  // ROL COORDINADOR
+  COORDINADOR: `
+    <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
+      <li class="nav-item mb-2">
+        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
+          <i class="bi bi-house-door text-primary"></i> <span>Inicio</span>
+        </a>
+      </li>
+      <li class="nav-item mb-3">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
+          <i class="bi bi-people"></i> <span>Registrar servidor</span>
+        </a>
+      </li>     
+
+      <li class="nav-item mt-4 border-top border-secondary pt-3">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(showChangePasswordModal)">
+          <i class="bi bi-shield-lock"></i> Seguridad
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-danger d-flex align-items-center gap-2" href="#" onclick="logout()">
+          <i class="bi bi-power"></i> <span>Finalizar Sesión</span>
+        </a>
+      </li>
+    </ul>`,
+
   // ROL ADMINISTRADOR
   ADMIN: `
     <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
       <li class="nav-item mb-2">
         <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
-          <i class="bi bi-shield-check text-success"></i> <span>Inicio (Panel Admin)</span>
+          <i class="bi bi-house-door text-primary"></i> <span>Inicio</span>
         </a>
       </li>
-      <li class="nav-item menu-section">
-        <a class="nav-link section-header d-flex justify-content-between align-items-center" 
-           href="javascript:void(0)" onclick="NovaMenu.toggleSubMenu('catAdminConfig', event)">
-          <span class="d-flex align-items-center gap-2">
-            <i class="bi bi-gear-fill"></i> Configuración
-          </span>
-          <i class="bi bi-chevron-right chevron-icon" style="font-size: 0.7rem;"></i>
+      <li class="nav-item mb-3">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
+          <i class="bi bi-people"></i> <span>Registrar servidor desde Admin</span>
         </a>
-        <div class="collapse" id="catAdminConfig">
-          <ul class="list-unstyled submenu-list ms-3 border-start border-secondary-subtle">
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(gestionarEmpresas)">Gestionar Empresas</a></li>
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(configurarTarifas)">Maestro de Tarifas</a></li>
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(gestionarZonas)">Zonas y Cobertura</a></li>
-          </ul>
-        </div>
-      </li>
-      <li class="nav-item menu-section mt-2">
-        <a class="nav-link section-header d-flex justify-content-between align-items-center" 
-           href="javascript:void(0)" onclick="NovaMenu.toggleSubMenu('catAdminAudit', event)">
-          <span class="d-flex align-items-center gap-2">
-            <i class="bi bi-journal-text"></i> Auditoría Global
-          </span>
-          <i class="bi bi-chevron-right chevron-icon" style="font-size: 0.7rem;"></i>
-        </a>
-        <div class="collapse" id="catAdminAudit">
-          <ul class="list-unstyled submenu-list ms-3 border-start border-secondary-subtle">
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(verLogsSistema)">Logs del Sistema</a></li>
-            <li><a class="nav-link" href="#" onclick="NovaMenu.ejecutarAccion(reporteGeneralVentas)">Reporte Consolidado</a></li>
-          </ul>
-        </div>
-      </li>
+      </li>     
+
       <li class="nav-item mt-4 border-top border-secondary pt-3">
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(showChangePasswordModal)">
-          <i class="bi bi-lock"></i> Seguridad Admin
+          <i class="bi bi-shield-lock"></i> Seguridad
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link text-danger d-flex align-items-center gap-2" href="#" onclick="logout()">
-          <i class="bi bi-power"></i> <span>Cerrar Sesión</span>
+          <i class="bi bi-power"></i> <span>Finalizar Sesión</span>
         </a>
       </li>
     </ul>`,
@@ -209,8 +184,8 @@ const MenuManager = {
 
     // 3. Inyectar el HTML del menú según el rol
     const r = Number(rol);
-    if (r === 1) contenedor.innerHTML = MENUS.EMPRESA;
-    else if (r === 2) contenedor.innerHTML = MENUS.MENSAJERO;
+    if (r === 1) contenedor.innerHTML = MENUS.PROMOTOR;
+    else if (r === 2) contenedor.innerHTML = MENUS.COORDINADOR;
     else if (r === 3) contenedor.innerHTML = MENUS.ADMIN;
     else MenuManager.mostrarMenuInvitado();
   },
