@@ -83,8 +83,8 @@ export const MENUS = {
         </a>
       </li>
       <li class="nav-item mb-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
-          <i class="bi bi-people"></i> <span>Registrar servidor</span>
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarTerminal)">
+          <i class="bi bi-people"></i> <span>Registrar dispositivo</span>
         </a>
       </li>     
 
@@ -110,7 +110,7 @@ export const MENUS = {
       </li>
       <li class="nav-item mb-3">
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
-          <i class="bi bi-people"></i> <span>Registrar servidor desde Admin</span>
+          <i class="bi bi-people"></i> <span>Registrar servidor</span>
         </a>
       </li>     
 
