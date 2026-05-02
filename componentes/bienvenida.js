@@ -14,7 +14,13 @@ class BienvenidaComponent extends HTMLElement {
 
     try {
       // 1. Cargar la vista
-      const response = await fetch("view/bienvenida.html");
+      // 1. Cargar la vista (Añadiendo un timestamp para romper el caché)
+      const response = await fetch(
+        `view/bienvenida.html?v=${new Date().getTime()}`,
+        {
+          cache: "no-store",
+        },
+      );
       const htmlText = await response.text();
 
       const template = document.createElement("template");
@@ -67,4 +73,4 @@ class BienvenidaComponent extends HTMLElement {
   }
 }
 
-customElements.define("bienvenida-component1", BienvenidaComponent);
+customElements.define("bienvenida-component", BienvenidaComponent);
