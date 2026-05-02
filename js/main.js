@@ -1,17 +1,138 @@
 const templateCache = {};
 var arrayGlobal = []; //array de promotores
 var folderPathIMG = ""; //variable que guarda id de carpeta donde se guardan las imagenes
-var versionApp = localStorage.getItem("app_version") || ""; //La version se debe cambiar en service-worker.js y main.js
+var versionApp = localStorage.getItem("asist_app_version") || ""; //La version se debe cambiar en service-worker.js y main.js
 let swRegistration = null; // 🔥 referencia global
 let intervalSW = null;
 let newVersionAvailable = null;
+//Para Notificaciones push
+const DB_NAME = "AsistenciaDB";
+const STORE_NAME = "configuracion";
 
-function registrarPersona() {
+/* =========================
+   GESTIÓN DE PUSH Y INDEXEDDB
+========================= */
+
+// Asegura que la DB y el Almacén existan
+function inicializarIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e);
+  });
+}
+
+// Guarda el UUID en IndexedDB (Solo lo llamas en la terminal del ADMIN)
+async function autorizarComoAdmin(uuid) {
+  await inicializarIndexedDB();
+  const db = await new Promise((res) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onsuccess = (e) => res(e.target.result);
+  });
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  tx.objectStore(STORE_NAME).put(uuid, "uuid_cliente");
+  console.log("Terminal autorizada localmente como Admin.");
+}
+
+/***************************************************/
+
+// main.js - Función Global de Identificación de Hardware
+async function obtenerUUIDHardwareGlobal() {
+  const specs = {};
+  try {
+    // 1. Recolección de GPU
+    const canvasGL = document.createElement("canvas");
+    const gl =
+      canvasGL.getContext("webgl") || canvasGL.getContext("experimental-webgl");
+
+    if (gl) {
+      const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+      specs.gpu = debugInfo
+        ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+        : "Generic GPU";
+    } else {
+      specs.gpu = "Not Supported";
+    }
+
+    // 2. Hardware y Pantalla
+    specs.cores = navigator.hardwareConcurrency || "N/A";
+    specs.memory = navigator.deviceMemory
+      ? `${navigator.deviceMemory}GB`
+      : "N/A";
+    specs.screen = `${window.screen.width}x${window.screen.height}`;
+    specs.pixel_ratio = Math.round(window.devicePixelRatio || 1);
+    specs.langs = navigator.language;
+    specs.platform = navigator.platform;
+
+    // 3. Generación de Canvas DNA (Huella gráfica de renderizado)
+    const canvas2D = document.createElement("canvas");
+    const ctx = canvas2D.getContext("2d");
+    canvas2D.width = 200;
+    canvas2D.height = 40;
+
+    ctx.textBaseline = "top";
+    ctx.font = "14px 'Arial'";
+    ctx.fillStyle = "#f60";
+    ctx.fillRect(10, 10, 50, 10);
+    ctx.fillStyle = "#069";
+    ctx.fillText("ASIST-2026-FIXED", 15, 12);
+
+    // Guardamos la representación visual como base64
+    specs.canvas_dna = canvas2D.toDataURL();
+
+    // 4. Retorno puro de specs
+    return {
+      status: "ready",
+      specs: specs,
+    };
+  } catch (e) {
+    console.error("Error recolectando ingredientes de hardware:", e);
+    return {
+      status: "error",
+      specs: null,
+      message: e.message,
+    };
+  }
+}
+
+function registrarServidor() {
   let main = document.getElementById("App");
   removeALLChilds(main);
-  const registroPersona = document.createElement("registro-persona-component");
-  registroPersona.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
-  main.appendChild(registroPersona);
+  const registroServidor = document.createElement("registrar-servidor");
+  registroServidor.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(registroServidor);
+}
+
+function registrarTerminal() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const registroTerminal = document.createElement("registrar-terminal");
+  registroTerminal.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(registroTerminal);
+}
+
+function generarToken() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const frmGenerarToken = document.createElement("generar-token-component");
+  frmGenerarToken.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(frmGenerarToken);
+}
+
+function marcarAsistencia() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const frmMarcarAsistencia = document.createElement(
+    "marcar-asistencia-component",
+  );
+  frmMarcarAsistencia.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(frmMarcarAsistencia);
 }
 
 function crearPlanilla() {
@@ -44,16 +165,6 @@ function getPlanillasMensajero() {
   const frmPlanillasMensajero = document.createElement("planillas-mensajero");
   frmPlanillasMensajero.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
   main.appendChild(frmPlanillasMensajero);
-}
-
-function consultarPlanilla() {
-  let main = document.getElementById("App");
-  removeALLChilds(main);
-  const frmConsultarPlanilla = document.createElement(
-    "consultar-planilla-component",
-  );
-  frmConsultarPlanilla.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
-  main.appendChild(frmConsultarPlanilla);
 }
 
 function consultarPlanillas() {
@@ -108,7 +219,7 @@ function getHome() {
   let main = document.getElementById("App");
   removeALLChilds(main);
   // 🔥 SIEMPRE leer la versión más reciente
-  versionApp = localStorage.getItem("app_version") || "";
+  versionApp = localStorage.getItem("asist_app_version") || "";
   const componente = document.createElement("bienvenida-component");
   componente.setAttribute("container", "#App");
   componente.versionApp = versionApp;
@@ -161,21 +272,24 @@ function removeALLChilds(parentNode) {
   }
 }
 
-function alertSMS(texto) {
+function alertSMS(texto, duracion = 10000) {
+  // Por defecto 5 segundos
   const myToast = document.getElementById("liveToast");
   const smsToast = myToast.querySelector(".toast-body");
 
-  // 1. Insertar el texto
   smsToast.innerHTML = texto;
 
-  // 2. Forzar que el contenedor padre esté por encima de todo (z-index)
-  // Buscamos el div que tiene las clases 'position-fixed bottom-0 end-0'
   const container = myToast.closest(".position-fixed");
   if (container) {
     container.style.zIndex = "1090";
   }
 
-  const toast = new bootstrap.Toast(myToast);
+  // Pasamos las opciones al inicializar el Toast
+  const toast = new bootstrap.Toast(myToast, {
+    autohide: true, // Se oculta solo
+    delay: duracion, // Tiempo en milisegundos
+  });
+
   toast.show();
 }
 
@@ -187,7 +301,7 @@ function iniciarAutoUpdateSW() {
 
   intervalSW = setInterval(() => {
     if (swRegistration) {
-      console.log("🔄 Buscando actualización del SW...");
+      //console.log("🔄 Buscando actualización del SW...");
       swRegistration.update();
     }
   }, 300000); // detecta versiones cada 30 minutos (1800000 ms) 30segundos 300000
@@ -224,7 +338,7 @@ function mostrarBotonActualizacion() {
     if (swRegistration && swRegistration.waiting) {
       // 🔥 AQUÍ recién aceptas la nueva versión
       if (newVersionAvailable) {
-        localStorage.setItem("app_version", newVersionAvailable);
+        localStorage.setItem("asist_app_version", newVersionAvailable);
       }
 
       swRegistration.waiting.postMessage({ action: "SKIP_WAITING" });
@@ -236,11 +350,14 @@ function mostrarBotonActualizacion() {
    INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", async function () {
+  // Inicializamos la DB al arrancar para que el SW no falle al intentar abrirla
+  inicializarIndexedDB().catch(console.error);
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./service-worker.js", {
         // Al usar "./" buscamos en la carpeta actual, sin importar el dominio
-        scope: "./",
+        scope: "/checkin/",
         updateViaCache: "none",
       })
       .then((reg) => {
@@ -260,7 +377,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // 🔥 si ya hay una versión en espera
         if (reg.waiting && navigator.serviceWorker.controller) {
-          console.log("SW ya estaba esperando");
+          //console.log("SW ya estaba esperando");
           mostrarBotonActualizacion();
         }
 
@@ -294,12 +411,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (swRegistration && swRegistration.waiting) {
           // 🔥 nueva versión (NO aplicar aún)
           newVersionAvailable = event.data.version;
-          console.log("Nueva versión detectada:", newVersionAvailable);
+          //console.log("Nueva versión detectada:", newVersionAvailable);
           mostrarBotonActualizacion();
         } else {
           // 🔥 versión actual activa
           versionApp = event.data.version;
-          localStorage.setItem("app_version", versionApp);
+          localStorage.setItem("asist_app_version", versionApp);
 
           // 🔥 actualizar UI si estás en home
           const label = document.getElementById("version-label");
@@ -319,7 +436,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         if (swRegistration) {
-          console.log("Validando actualizaciones...");
+          //console.log("Validando actualizaciones...");
           swRegistration.update();
         }
       }
