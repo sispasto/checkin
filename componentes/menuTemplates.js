@@ -214,4 +214,4 @@ const MenuManager = {
 };
 
 // EXPOSICIÓN GLOBAL
-window.NovaMenu = MenuManager;
+window.Toolbar = MenuManager;
