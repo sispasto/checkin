@@ -35,7 +35,7 @@ export const MENUS = {
     return `
       <ul class="navbar-nav flex-grow-1 pe-3">
         <li class="nav-item">
-          <a class="nav-link active" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
+          <a class="nav-link active" href="#" onclick="Toolbar.ejecutarAccion(getHome)">
             <i class="bi bi-house"></i> Inicio
           </a>
         </li>
@@ -48,22 +48,22 @@ export const MENUS = {
   PROMOTOR: `
     <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
       <li class="nav-item mb-2">
-        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
+        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(getHome)">
           <i class="bi bi-house-door"></i> <span>Inicio</span>
         </a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarTerminal)">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(registrarTerminal)">
           <i class="bi bi-search"></i> <span>Registrar celular</span>
         </a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(marcarAsistencia)">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(marcarAsistencia)">
           <i class="bi bi-search"></i> <span>Registrar Asistencia</span>
         </a>
       </li>
       <li class="nav-item mt-4 border-top border-secondary pt-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(showChangePasswordModal)">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(showChangePasswordModal)">
           <i class="bi bi-key"></i> <span>Cambiar Clave</span>
         </a>
       </li>
@@ -78,18 +78,18 @@ export const MENUS = {
   COORDINADOR: `
     <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
       <li class="nav-item mb-2">
-        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
+        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(getHome)">
           <i class="bi bi-house-door text-primary"></i> <span>Inicio</span>
         </a>
       </li>
       <li class="nav-item mb-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarTerminal)">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(registrarTerminal)">
           <i class="bi bi-people"></i> <span>Registrar dispositivo</span>
         </a>
       </li>     
 
       <li class="nav-item mt-4 border-top border-secondary pt-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(showChangePasswordModal)">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(showChangePasswordModal)">
           <i class="bi bi-shield-lock"></i> Seguridad
         </a>
       </li>
@@ -104,18 +104,18 @@ export const MENUS = {
   ADMIN: `
     <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
       <li class="nav-item mb-2">
-        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(getHome)">
+        <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(getHome)">
           <i class="bi bi-house-door text-primary"></i> <span>Inicio</span>
         </a>
       </li>
       <li class="nav-item mb-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(registrarServidor)">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(registrarServidor)">
           <i class="bi bi-people"></i> <span>Registrar servidor</span>
         </a>
       </li>     
 
       <li class="nav-item mt-4 border-top border-secondary pt-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="NovaMenu.ejecutarAccion(showChangePasswordModal)">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(showChangePasswordModal)">
           <i class="bi bi-shield-lock"></i> Seguridad
         </a>
       </li>
