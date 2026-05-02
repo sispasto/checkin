@@ -632,5 +632,14 @@
         }
       });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+      eruda.init();
+      console.log(
+        "Eruda inicializado. Versión de App:",
+        localStorage.getItem("asist_pasto_version"),
+      );
+    </script>
   </body>
 </html>
