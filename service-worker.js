@@ -67,12 +67,11 @@ self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
-        "./",
-        "./index.html",
-        "./css/home.css",
-        "./css/loader.css",
-        "./js/main.js",
-        "./componentes/index.js",
+        "/checkin/",
+        "/checkin/index.html",
+        "/checkin/css/home.css",
+        "/checkin/js/main.js",
+        "/checkin/componentes/index.js", // Asegúrate de cachear la vista correcta
       ]);
     }),
   );
