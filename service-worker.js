@@ -1,4 +1,4 @@
-const APP_VERSION = "3.3";
+const APP_VERSION = "3.4";
 const CACHE_NAME = `app-cache-v${APP_VERSION}`;
 const DB_NAME = "AsistenciaDB";
 const STORE_NAME = "configuracion";
