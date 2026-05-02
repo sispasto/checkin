@@ -1,12 +1,11 @@
 const templateCache = {};
 var arrayGlobal = []; //array de promotores
 var folderPathIMG = ""; //variable que guarda id de carpeta donde se guardan las imagenes
-var versionApp = localStorage.getItem("app_version") || ""; //La version se debe cambiar en service-worker.js y main.js
+var versionApp = localStorage.getItem("asist_app_version") || ""; //La version se debe cambiar en service-worker.js y main.js
 let swRegistration = null; // 🔥 referencia global
 let intervalSW = null;
 let newVersionAvailable = null;
 //Para Notificaciones push
-const VAPID_PUBLIC_KEY = "TU_LLAVE_PUBLICA_VAPID_AQUI";
 const DB_NAME = "AsistenciaDB";
 const STORE_NAME = "configuracion";
 
@@ -41,45 +40,6 @@ async function autorizarComoAdmin(uuid) {
   console.log("Terminal autorizada localmente como Admin.");
 }
 
-// Activa el Push Manager del navegador
-async function suscribirDispositivoAPush() {
-  try {
-    if (!swRegistration) return;
-
-    // Pedir permiso al usuario
-    const permiso = await Notification.requestPermission();
-    if (permiso !== "granted") {
-      console.warn("Permiso de notificaciones denegado");
-      return;
-    }
-
-    // Suscribir al servidor de Push
-    const subscription = await swRegistration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-    });
-
-    console.log("Suscripción exitosa:", subscription);
-
-    // Aquí enviarías 'subscription' a tu tabla 'asist_terminal' de Supabase
-    // junto con el uuid_cliente para que el servidor sepa a quién enviarle.
-    return subscription;
-  } catch (error) {
-    console.error("Error al suscribir al Push:", error);
-  }
-}
-
-// Función auxiliar para convertir la llave VAPID
-function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
 /***************************************************/
 
 // main.js - Función Global de Identificación de Hardware
@@ -259,7 +219,7 @@ function getHome() {
   let main = document.getElementById("App");
   removeALLChilds(main);
   // 🔥 SIEMPRE leer la versión más reciente
-  versionApp = localStorage.getItem("app_version") || "";
+  versionApp = localStorage.getItem("asist_app_version") || "";
   const componente = document.createElement("bienvenida-component");
   componente.setAttribute("container", "#App");
   componente.versionApp = versionApp;
@@ -378,7 +338,7 @@ function mostrarBotonActualizacion() {
     if (swRegistration && swRegistration.waiting) {
       // 🔥 AQUÍ recién aceptas la nueva versión
       if (newVersionAvailable) {
-        localStorage.setItem("app_version", newVersionAvailable);
+        localStorage.setItem("asist_app_version", newVersionAvailable);
       }
 
       swRegistration.waiting.postMessage({ action: "SKIP_WAITING" });
@@ -458,7 +418,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         } else {
           // 🔥 versión actual activa
           versionApp = event.data.version;
-          localStorage.setItem("app_version", versionApp);
+          localStorage.setItem("asist_app_version", versionApp);
 
           // 🔥 actualizar UI si estás en home
           const label = document.getElementById("version-label");
