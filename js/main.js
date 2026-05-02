@@ -421,7 +421,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           // 🔥 actualizar UI si estás en home
           const label = document.getElementById("version-label");
           if (label) {
-            label.textContent = `NovaEnvios v${versionApp}`;
+            label.textContent = `Asist v${versionApp}`;
           }
         }
       }
