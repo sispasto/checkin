@@ -52,7 +52,7 @@ async function procesarNotificacionPush(event) {
     tag: "asistencia-alerta",
     renotify: true,
     data: {
-      url: data.url || "/index.html",
+      url: data.url || "checkin/index.html",
     },
   };
 
