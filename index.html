@@ -316,7 +316,7 @@
         } = await supabaseClient.auth.getSession();
 
         if (!session) {
-          NovaMenu.mostrarMenuInvitado();
+          Toolbar.mostrarMenuInvitado();
           return;
         }
 
@@ -342,7 +342,7 @@
             sessionStorage.setItem("userRol", rol);
             sessionStorage.setItem("personaId", persona_id || "");
 
-            NovaMenu.mostrarMenuPorRol(rol, nombre);
+            Toolbar.mostrarMenuPorRol(rol, nombre);
           }
         } catch (error) {
           console.error("Error verificando sesión:", error);
@@ -424,7 +424,7 @@
           if (data.status === "success") {
             const { nombre, rol, persona_id, codigo } = data;
 
-            NovaMenu.mostrarMenuPorRol(rol, nombre);
+            Toolbar.mostrarMenuPorRol(rol, nombre);
             sessionStorage.setItem("nombreUsuario", nombre);
             sessionStorage.setItem("userRol", rol);
             sessionStorage.setItem("personaId", persona_id || "");
@@ -568,7 +568,7 @@
           // 3. Valores de seguridad para que la App no "explote" al leerlos
           sessionStorage.setItem("nombreUsuario", "");
 
-          NovaMenu.mostrarMenuInvitado();
+          Toolbar.mostrarMenuInvitado();
 
           // 5. Limpiar campos físicos de los formularios de login/password
           const fields = [
@@ -589,7 +589,7 @@
             if (bsCollapse) bsCollapse.hide();
           }
 
-          NovaMenu.mostrarMenuInvitado();
+          Toolbar.mostrarMenuInvitado();
 
           // 7. Redirigir al Home y notificar
           if (typeof getHome === "function") getHome();
