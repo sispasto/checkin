@@ -390,14 +390,16 @@ function mostrarBotonActualizacion() {
    INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", async function () {
+  const baseDir = window.location.pathname.includes("/checkin")
+    ? "/checkin/"
+    : "./";
   // Inicializamos la DB al arrancar para que el SW no falle al intentar abrirla
   inicializarIndexedDB().catch(console.error);
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
-      .register("./service-worker.js", {
-        // Al usar "./" buscamos en la carpeta actual, sin importar el dominio
-        scope: "./",
+      .register(`${baseDir}service-worker.js`, {
+        scope: baseDir, // 🔥 Esto es vital para que el SW controle toda la subcarpeta /checkin/
         updateViaCache: "none",
       })
       .then((reg) => {
