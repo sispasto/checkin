@@ -46,10 +46,10 @@ async function procesarNotificacionPush(event) {
 
   const options = {
     body: data.body,
-    icon: "/checkin/assets/icon-192x192.png", // ✅ ruta completa
+    icon: "/checkin/assets/icon_push-192x192.png", // ✅ ruta completa
     badge: "/checkin/assets/badge.png", // ✅ ruta completa
     vibrate: [200, 100, 200],
-    tag: "asistencia-alerta",
+    tag: "Asistencia-alerta",
     renotify: true,
     data: {
       url: data.url || "/checkin/index.html", // ✅ también aquí
