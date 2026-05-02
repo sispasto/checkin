@@ -46,13 +46,13 @@ async function procesarNotificacionPush(event) {
 
   const options = {
     body: data.body,
-    icon: "./img/icon-192x192.png", // Ajusta a tus iconos
-    badge: "./img/badge.png",
+    icon: "/assets/icon-192x192.png", // ✅ ruta real
+    badge: "/assets/badge.png", // ✅ ruta real
     vibrate: [200, 100, 200],
     tag: "asistencia-alerta",
     renotify: true,
     data: {
-      url: data.url || "./index.html",
+      url: data.url || "/index.html",
     },
   };
 
