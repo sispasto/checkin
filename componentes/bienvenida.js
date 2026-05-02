@@ -67,4 +67,4 @@ class BienvenidaComponent extends HTMLElement {
   }
 }
 
-customElements.define("bienvenida-component", BienvenidaComponent);
+customElements.define("bienvenida-component1", BienvenidaComponent);
