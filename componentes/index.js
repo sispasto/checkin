@@ -1,4 +1,4 @@
-import "./bienvenida.js";
+import "./welcome.js";
 import "./acercade.js";
 import "./generarToken.js";
 import "./registrarServidor.js";
