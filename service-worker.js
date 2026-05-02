@@ -1,5 +1,5 @@
 const APP_VERSION = "1.2";
-const CACHE_NAME = `app-cache-v${APP_VERSION}`;
+const CACHE_NAME = `checkin-app-cache-v${APP_VERSION}`;
 const DB_NAME = "AsistenciaDB";
 const STORE_NAME = "configuracion";
 
