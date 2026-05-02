@@ -220,7 +220,7 @@ function getHome() {
   removeALLChilds(main);
   // 🔥 SIEMPRE leer la versión más reciente
   versionApp = localStorage.getItem("asist_app_version") || "";
-  const componente = document.createElement("bienvenida-component");
+  const componente = document.createElement("bienvenida-component1");
   componente.setAttribute("container", "#App");
   componente.versionApp = versionApp;
 
