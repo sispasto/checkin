@@ -1,4 +1,4 @@
-const APP_VERSION = "3.4";
+const APP_VERSION = "3.5";
 const CACHE_NAME = `app-cache-v${APP_VERSION}`;
 const DB_NAME = "AsistenciaDB";
 const STORE_NAME = "configuracion";
@@ -46,13 +46,13 @@ async function procesarNotificacionPush(event) {
 
   const options = {
     body: data.body,
-    icon: "/assets/icon-192x192.png", // ✅ ruta real
-    badge: "/assets/badge.png", // ✅ ruta real
+    icon: "/checkin/assets/icon-192x192.png", // ✅ ruta completa
+    badge: "/checkin/assets/badge.png", // ✅ ruta completa
     vibrate: [200, 100, 200],
     tag: "asistencia-alerta",
     renotify: true,
     data: {
-      url: data.url || "checkin/index.html",
+      url: data.url || "/checkin/index.html", // ✅ también aquí
     },
   };
 
