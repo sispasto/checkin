@@ -1,97 +1,106 @@
 <style>
   .card-reporte {
-    background-color: #121418 !important;
+    background-color: #0d1117 !important;
     border-radius: 15px !important;
-    max-width: 500px;
+    max-width: 500px; /* Tamaño ideal para móvil */
     margin: auto;
-  }
-  .table-asist {
-    color: #e0e0e0;
-    font-size: 0.85rem;
-  }
-  .table-asist thead th {
-    border-bottom: 2px solid #333;
-    color: #17a2b8;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-  }
-  .status-badge {
-    padding: 3px 8px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: bold;
-  }
-  .bg-retardo {
-    background-color: #ffc107;
-    color: #000;
-  }
-  .bg-falta {
-    background-color: #dc3545;
-    color: #fff;
-  }
-  .bg-ok {
-    background-color: #28a745;
-    color: #fff;
-  }
-  .bg-salida {
-    background-color: #fd7e14;
-    color: #fff;
+    border: 1px solid #30363d !important;
   }
 
-  .list-group-item {
-    background-color: transparent !important;
-    border-color: #2a2d34 !important;
+  /* Contenedor de la lista */
+  .lista-asistencia {
+    padding: 0;
+    margin: 0;
+  }
+
+  .registro-agente {
+    border-bottom: 1px solid #21262d;
+    padding: 12px 15px;
+    transition: background 0.2s;
+  }
+
+  .registro-agente:nth-child(even) {
+    background-color: #161b2255;
+  }
+
+  /* Primera fila: Nombre */
+  .agente-nombre {
+    color: #58a6ff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Segunda fila: Las 4 marcaciones */
+  .grid-marcaciones {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .bloque-turno {
+    text-align: center;
+    background: #00000044;
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+  }
+
+  .turno-label {
+    display: block;
+    font-size: 9px;
+    color: #8b949e;
+    margin-bottom: 2px;
+  }
+
+  .turno-hora {
+    display: block;
+    font-family: "Fira Code", monospace;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  /* Estados */
+  .text-falta {
+    color: #ff7b72;
+  }
+  .text-ok {
+    color: #3fb950;
+  }
+  .text-warn {
+    color: #d29922;
   }
 </style>
 
-<div class="container mt-3">
-  <div class="card card-reporte text-white shadow-lg border-0">
+<div class="container mt-3 mb-5">
+  <div class="card card-reporte text-white shadow-lg">
     <div
       class="card-header bg-gradient-dark py-3 border-secondary d-flex justify-content-between align-items-center"
     >
-      <h6 class="mb-0 text-info">
-        <i class="bi bi-file-earmark-bar-graph-fill me-2"></i>REPORTE {{turno}}
+      <h6 class="mb-0 text-info fw-bold">
+        <i class="bi bi-person-check-fill me-2"></i>CONTROL DE ASISTENCIA
       </h6>
-      <span class="badge bg-secondary" style="font-size: 10px">{{fecha}}</span>
+      <span class="badge bg-dark border border-secondary text-secondary"
+        >{{fecha}}</span
+      >
     </div>
 
     <div class="card-body p-0">
       <div id="loader-reporte" class="text-center py-5">
         <div class="spinner-border text-info" role="status"></div>
-        <p class="text-secondary small mt-2">Consultando registros...</p>
+        <p class="text-secondary small mt-2 font-monospace">SINCRONIZANDO...</p>
       </div>
 
-      <div id="contenido-reporte" class="d-none">
-        <div class="row g-0 text-center border-bottom border-secondary">
-          <div class="col-6 py-2 border-end border-secondary">
-            <small class="d-block text-secondary">No marcaron</small>
-            <h4 class="text-danger mb-0" id="res-faltas">0</h4>
-          </div>
-          <div class="col-6 py-2">
-            <small class="d-block text-secondary">Novedades</small>
-            <h4 class="text-warning mb-0" id="res-novedades">0</h4>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table class="table table-asist mb-0">
-            <thead>
-              <tr>
-                <th class="ps-3">Promotor</th>
-                <th>Hora</th>
-                <th class="text-center">Estado</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-body"></tbody>
-          </table>
-        </div>
-      </div>
+      <div id="contenido-reporte" class="d-none lista-asistencia"></div>
     </div>
 
     <div class="card-footer bg-black text-center py-3">
       <button
         onclick="window.location.hash = '#/'"
-        class="btn btn-outline-info btn-sm w-100"
+        class="btn btn-outline-secondary btn-sm w-100"
       >
         <i class="bi bi-arrow-left me-2"></i>VOLVER AL PANEL
       </button>
@@ -101,69 +110,71 @@
 
 <script>
   (async function () {
-    // Las variables TURNO_URL y FECHA_URL son inyectadas por el componente
-    const tbody = document.getElementById("tabla-body");
+    const contenedor = document.getElementById("contenido-reporte");
     const loader = document.getElementById("loader-reporte");
-    const contenido = document.getElementById("contenido-reporte");
 
-    async function cargarDetalle() {
+    async function cargarMatriz() {
       try {
-        // 1. Consultar todos los promotores y sus marcas
-        // Usamos un RPC o una vista que traiga a TODOS (LEFT JOIN)
-        const { data, error } = await window._supabase
-          .from("asist_vista_asistencia") // Asegúrate de que esta vista incluya a los que no marcaron
-          .select("nombre_persona, hora_registro, estado_asistencia")
-          .eq("fecha_registro", FECHA_URL)
-          .eq("tipo_marcado", TURNO_URL);
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_completo`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ fecha: FECHA_URL }),
+          },
+        );
 
-        if (error) throw error;
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
 
-        // 2. Procesar contadores
-        let faltas = 0;
-        let novedades = 0;
+        contenedor.innerHTML = "";
 
-        tbody.innerHTML = "";
+        result.data.forEach((p) => {
+          // Función para generar el HTML de cada turno
+          const formatTurno = (label, data) => {
+            let color = "text-ok";
+            if (data.estado === "FALTA") color = "text-falta";
+            else if (data.estado !== "A TIEMPO" && data.estado !== "AL DIA")
+              color = "text-warn";
 
-        data.forEach((reg) => {
-          const status = reg.estado_asistencia || "NO MARCÓ";
-          let badgeClass = "bg-ok";
+            return `
+              <div class="bloque-turno">
+                <span class="turno-label">\${label}</span>
+                <span class="turno-hora \${color}">\${data.hora}</span>
+              </div>
+            `;
+          };
 
-          if (status === "NO MARCÓ") {
-            badgeClass = "bg-falta";
-            faltas++;
-          } else if (status === "RETARDO") {
-            badgeClass = "bg-retardo";
-            novedades++;
-          } else if (status === "SALIDA ANTICIPADA") {
-            badgeClass = "bg-salida";
-            novedades++;
-          }
-
-          const fila = `
-            <tr>
-              <td class="ps-3 border-0">
-                <div class="fw-bold text-white" style="font-size: 12px;">\${reg.nombre_persona}</div>
-              </td>
-              <td class="border-0 small">\${reg.hora_registro || '--:--'}</td>
-              <td class="text-center border-0">
-                <span class="status-badge \${badgeClass}">\${status}</span>
-              </td>
-            </tr>
+          const htmlRegistro = `
+            <div class="registro-agente">
+              <div class="agente-nombre">
+                <span>\${p.info.nombre}</span>
+                <span class="text-secondary" style="font-size: 10px;">ID: \${p.info.codigo}</span>
+              </div>
+              
+              <div class="grid-marcaciones">
+                \${formatTurno('E1', p.e1)}
+                \${formatTurno('S1', p.s1)}
+                \${formatTurno('E2', p.e2)}
+                \${formatTurno('S2', p.s2)}
+              </div>
+            </div>
           `;
-          tbody.innerHTML += fila;
+          contenedor.innerHTML += htmlRegistro;
         });
 
-        document.getElementById("res-faltas").innerText = faltas;
-        document.getElementById("res-novedades").innerText = novedades;
-
         loader.classList.add("d-none");
-        contenido.classList.remove("d-none");
+        contenedor.classList.remove("d-none");
       } catch (err) {
         console.error("Error:", err);
-        loader.innerHTML = `<p class="text-danger p-3">Error al cargar datos.</p>`;
+        loader.innerHTML = `<p class="text-danger p-4 font-monospace">Error: \${err.message}</p>`;
       }
     }
 
-    cargarDetalle();
+    cargarMatriz();
   })();
 </script>
