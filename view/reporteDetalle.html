@@ -49,7 +49,10 @@
             />
           </div>
           <div class="col-2 text-end">
-            <button onclick="cargarMatriz()" class="btn btn-filter w-100">
+            <button
+              onclick="nsReporteAsistencia.cargarMatriz()"
+              class="btn btn-filter w-100"
+            >
               <i class="bi bi-search"></i>
             </button>
           </div>
@@ -76,109 +79,109 @@
 </div>
 
 <script>
-  // 1. Referencias a elementos del DOM
-  const contenedor = document.getElementById("contenido-reporte");
-  const loader = document.getElementById("loader-reporte");
-  const inputFecha = document.getElementById("input-fecha");
+  var nsReporteAsistencia = (function () {
+    // Referencias privadas
+    const _getDom = () => ({
+      contenedor: document.getElementById("contenido-reporte"),
+      loader: document.getElementById("loader-reporte"),
+      inputFecha: document.getElementById("input-fecha"),
+    });
 
-  // 2. Establecer fecha de hoy por defecto (Formato YYYY-MM-DD)
-  const hoy = new Date().toLocaleDateString("en-CA", {
-    timeZone: "America/Bogota",
-  });
-  if (inputFecha) inputFecha.value = hoy;
+    async function cargarMatriz() {
+      const dom = _getDom();
+      if (!dom.contenedor || !dom.loader) return;
 
-  // 3. Función principal de carga
-  async function cargarMatriz() {
-    // Validar que tengamos los elementos necesarios
-    if (!contenedor || !loader) return;
+      const fechaSeleccionada = dom.inputFecha.value;
 
-    const fechaSeleccionada = inputFecha.value;
+      // UI Feedback: Reset e inicio de carga
+      dom.loader.classList.remove("d-none");
+      dom.contenedor.classList.add("d-none");
+      dom.contenedor.innerHTML = "";
 
-    // Reset de interfaz
-    loader.classList.remove("d-none");
-    contenedor.classList.add("d-none");
-    contenedor.innerHTML = "";
-
-    try {
-      const response = await fetch(
-        `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_completo`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: window.SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+      try {
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_completo`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ fecha: fechaSeleccionada }),
           },
-          body: JSON.stringify({ fecha: fechaSeleccionada }),
-        },
-      );
+        );
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Error en el servidor");
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(result.error || "Error de comunicación");
 
-      // --- VALIDACIÓN DE DATOS ---
-      if (!result.data || result.data.length === 0) {
-        contenedor.innerHTML = `
-          <div class="text-center py-5 px-3">
-            <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
-            <h6 class="text-white-50">SIN REGISTROS</h6>
-            <p class="small text-muted font-monospace">No hay marcas para el ${fechaSeleccionada}</p>
-          </div>
-        `;
-      } else {
-        // --- RENDERIZADO DE LA MATRIZ ---
-        let htmlAcumulado = "";
+        // Caso: Sin registros
+        if (!result.data || result.data.length === 0) {
+          dom.contenedor.innerHTML = `
+                    <div class="text-center py-5 px-3">
+                        <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
+                        <h6 class="text-white-50">SIN REGISTROS</h6>
+                        <p class="small text-muted font-monospace">No hay marcas para el ${fechaSeleccionada}</p>
+                    </div>`;
+        } else {
+          // Caso: Generación de Matriz
+          let htmlAcumulado = "";
 
-        result.data.forEach((p) => {
-          const formatTurno = (label, data) => {
-            let color = "text-ok";
-            const estado = (data.estado || "").toUpperCase();
+          result.data.forEach((p) => {
+            const formatTurno = (label, data) => {
+              let color = "text-ok";
+              const estado = (data.estado || "").toUpperCase();
 
-            if (estado === "FALTA") color = "text-falta";
-            else if (estado !== "A TIEMPO" && estado !== "AL DIA")
-              color = "text-warn";
+              if (estado === "FALTA") color = "text-falta";
+              else if (estado !== "A TIEMPO" && estado !== "AL DIA")
+                color = "text-warn";
 
-            return `
-              <div class="bloque-turno">
-                <span class="turno-label">${label}</span>
-                <span class="turno-hora ${color}">${data.hora || "--:--"}</span>
-              </div>
-            `;
-          };
+              return `
+                            <div class="bloque-turno">
+                                <span class="turno-label">${label}</span>
+                                <span class="turno-hora ${color}">${data.hora || "--:--"}</span>
+                            </div>`;
+            };
 
-          htmlAcumulado += `
-            <div class="registro-agente">
-              <div class="agente-nombre">
-                <span>${p.info.nombre}</span>
-                <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
-              </div>
-              <div class="grid-marcaciones">
-                ${formatTurno("E1", p.e1)}
-                ${formatTurno("S1", p.s1)}
-                ${formatTurno("E2", p.e2)}
-                ${formatTurno("S2", p.s2)}
-              </div>
-            </div>
-          `;
-        }); // <-- Aquí faltaba esta llave de cierre
-
-        contenedor.innerHTML = htmlAcumulado;
+            htmlAcumulado += `
+                        <div class="registro-agente">
+                            <div class="agente-nombre">
+                                <span>${p.info.nombre}</span>
+                                <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
+                            </div>
+                            <div class="grid-marcaciones">
+                                ${formatTurno("E1", p.e1)}
+                                ${formatTurno("S1", p.s1)}
+                                ${formatTurno("E2", p.e2)}
+                                ${formatTurno("S2", p.s2)}
+                            </div>
+                        </div>`;
+          });
+          dom.contenedor.innerHTML = htmlAcumulado;
+        }
+      } catch (err) {
+        console.error("Error en Matriz:", err);
+        dom.contenedor.innerHTML = `<div class="alert alert-danger m-3 small">ERROR: ${err.message}</div>`;
+      } finally {
+        dom.loader.classList.add("d-none");
+        dom.contenedor.classList.remove("d-none");
       }
-    } catch (err) {
-      console.error("Error cargando reporte:", err);
-      contenedor.innerHTML = `
-        <div class="alert alert-danger m-3 font-monospace" style="font-size: 11px;">
-          <i class="bi bi-exclamation-octagon me-2"></i>ERROR: ${err.message}
-        </div>
-      `;
-    } finally {
-      loader.classList.add("d-none");
-      contenedor.classList.remove("d-none");
     }
-  }
 
-  // 4. Ejecución inicial
-  document.addEventListener("DOMContentLoaded", () => {
-    cargarMatriz();
-  });
+    // Inicialización automática al cargar el componente
+    setTimeout(() => {
+      const dom = _getDom();
+      if (dom.inputFecha) {
+        const hoy = new Date().toLocaleDateString("en-CA", {
+          timeZone: "America/Bogota",
+        });
+        dom.inputFecha.value = hoy;
+      }
+      cargarMatriz();
+    }, 150);
+
+    // Exponemos el método para el botón del HTML
+    return { cargarMatriz };
+  })();
 </script>
