@@ -86,8 +86,12 @@ export const MENUS = {
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(registrarTerminal)">
           <i class="bi bi-people"></i> <span>Registrar dispositivo</span>
         </a>
-      </li>     
-
+      </li>    
+      <li class="nav-item mb-3">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(reportePromotores)">
+          <i class="bi bi-people"></i> <span>Reporte de promotores</span>
+        </a>
+      </li> 
       <li class="nav-item mt-4 border-top border-secondary pt-3">
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(showChangePasswordModal)">
           <i class="bi bi-shield-lock"></i> Seguridad
