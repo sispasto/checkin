@@ -1,0 +1,292 @@
+<style>
+  /* --- Contenedor Principal (Limpio con sombra suave) --- */
+  .card-reporte {
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden;
+  }
+
+  /* --- Header del Panel (Negro sólido) --- */
+  .card-header {
+    background: #212529 !important; /* El negro de la barra superior */
+    padding: 12px 20px !important;
+    border-bottom: none !important;
+  }
+
+  .header-title {
+    color: #ffffff !important;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: none;
+  }
+
+  /* --- Barra de Títulos de la Tabla (Gris Carbón) --- */
+  .header-labels {
+    background: #343a40 !important; /* Gris oscuro de "Guías registradas" */
+    color: #ffffff !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .header-labels th {
+    padding: 10px !important;
+    border: 1px solid #454d55 !important;
+  }
+
+  /* --- Filas de la Tabla (Estilo Cebra sutil) --- */
+  .tabla-asistencia {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .fila-agente {
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    transition: background 0.2s;
+  }
+
+  .fila-agente:nth-child(even) {
+    background: #f8f9fa; /* Efecto cebra para no perder la vista */
+  }
+
+  .fila-agente:hover {
+    background: #e9ecef;
+  }
+
+  .agente-info {
+    padding: 10px 15px !important;
+    border-right: 1px solid #dee2e6;
+  }
+
+  .nombre-txt {
+    color: #212529;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .id-txt {
+    color: #6c757d;
+    font-size: 0.75rem;
+    margin-left: 5px;
+  }
+
+  /* --- Marcaciones (Estilo Celdas de Planilla) --- */
+  .celda-marca {
+    border-right: 1px solid #dee2e6;
+    padding: 8px !important;
+    text-align: center;
+  }
+
+  /* Badges de estado (Como el de CRÉDITO) */
+  .badge-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    min-width: 70px;
+  }
+
+  .status-ok {
+    background: #d4edda;
+    color: #155724; /* Verde planilla */
+  }
+
+  .status-falta {
+    background: #f8d7da;
+    color: #721c24; /* Rojo planilla */
+  }
+
+  .status-tarde {
+    background: #ffc107; /* Amarillo como el de "CRÉDITO" */
+    color: #000000;
+  }
+
+  /* Botón Volver (Negro con borde) */
+  .btn-footer {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-radius: 6px;
+    border: 1px solid #333;
+    font-size: 0.8rem;
+    padding: 8px 20px;
+  }
+</style>
+
+<div class="container mt-3 mb-5">
+  <div
+    class="card card-reporte text-white shadow-lg"
+    style="background: #0d1117"
+  >
+    <div
+      class="card-header bg-gradient-dark py-3 border-secondary d-flex justify-content-between align-items-center"
+    >
+      <h6 class="mb-0 text-info fw-bold">
+        <i class="bi bi-person-check-fill me-2"></i>CONTROL DE ASISTENCIA
+      </h6>
+    </div>
+
+    <div class="card-body p-3">
+      <div class="filtro-fecha">
+        <div class="row g-2 align-items-end">
+          <div class="col-10">
+            <label class="text-secondary small d-block mb-1"
+              >Seleccionar Fecha:</label
+            >
+            <input
+              type="date"
+              id="input-fecha"
+              class="form-control input-dark w-100"
+            />
+          </div>
+          <div class="col-2 text-end">
+            <button
+              onclick="nsReporteAsistencia.cargarMatriz()"
+              class="btn btn-filter w-100"
+            >
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="loader-reporte" class="text-center py-5 d-none">
+        <div class="spinner-border text-info" role="status"></div>
+        <p class="text-secondary small mt-2 font-monospace">SINCRONIZANDO...</p>
+      </div>
+
+      <div id="contenido-reporte" class="lista-asistencia"></div>
+    </div>
+
+    <div class="card-footer bg-black text-center py-3">
+      <button
+        onclick="window.location.hash = '#/'"
+        class="btn btn-outline-secondary btn-sm w-100"
+      >
+        <i class="bi bi-arrow-left me-2"></i>VOLVER AL PANEL
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.nsReporteAsistencia = (function () {
+    const _getDom = () => ({
+      contenedor: document.getElementById("contenido-reporte"),
+      loader: document.getElementById("loader-reporte"),
+      inputFecha: document.getElementById("input-fecha"),
+    });
+
+    async function cargarMatriz() {
+      const dom = _getDom();
+      if (!dom.contenedor || !dom.loader) return;
+
+      const fechaSeleccionada = dom.inputFecha.value;
+
+      dom.loader.classList.remove("d-none");
+      dom.contenedor.classList.add("d-none");
+      dom.contenedor.innerHTML = "";
+
+      try {
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_detalle`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ fecha: fechaSeleccionada }),
+          },
+        );
+
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(result.error || "Error de comunicación");
+
+        if (!result.data || result.data.length === 0) {
+          dom.contenedor.innerHTML = `
+            <div class="text-center py-5 px-3">
+              <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
+              <h6 class="text-muted">SIN REGISTROS</h6>
+              <p class="small text-muted">No hay marcas para el ${fechaSeleccionada}</p>
+            </div>`;
+        } else {
+          // --- CONSTRUCCIÓN DE LA TABLA "SOFT-CLEAN" ---
+          // ... dentro del else de cargarMatriz ...
+          let htmlAcumulado = `
+          <div class="table-responsive">
+            <table class="tabla-asistencia">
+              <thead>
+                <tr class="header-labels text-center">
+                  <th class="text-start ps-4">NOMBRE COMPLETO / ID</th>
+                  <th>E1</th>
+                  <th>S1</th>
+                  <th>E2</th>
+                  <th>S2</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+          result.data.forEach((p) => {
+            const renderMarca = (obj) => {
+              let claseStatus = "status-ok";
+              const estado = (obj.estado || "").toUpperCase();
+
+              if (estado === "FALTA" || obj.hora === "--:--")
+                claseStatus = "status-falta";
+              else if (estado === "TARDE") claseStatus = "status-tarde";
+
+              return `
+              <td class="celda-marca">
+                <span class="badge-status ${claseStatus}">
+                  ${obj.hora || "--:--"}
+                </span>
+              </td>`;
+            };
+
+            htmlAcumulado += `
+            <tr class="fila-agente">
+              <td class="agente-info">
+                <span class="nombre-txt">${p.info.nombre}</span>
+                <span class="id-txt">ID: ${p.info.codigo}</span>
+              </td>
+              ${renderMarca(p.e1)}
+              ${renderMarca(p.s1)}
+              ${renderMarca(p.e2)}
+              ${renderMarca(p.s2)}
+            </tr>
+          `;
+          });
+
+          htmlAcumulado += `</tbody></table></div>`;
+          dom.contenedor.innerHTML = htmlAcumulado;
+        }
+      } catch (err) {
+        console.error("Error en Matriz:", err);
+        dom.contenedor.innerHTML = `<div class="alert alert-danger m-3 small">ERROR: ${err.message}</div>`;
+      } finally {
+        dom.loader.classList.add("d-none");
+        dom.contenedor.classList.remove("d-none");
+      }
+    }
+
+    setTimeout(() => {
+      const dom = _getDom();
+      if (dom.inputFecha) {
+        const hoy = new Date().toLocaleDateString("en-CA", {
+          timeZone: "America/Bogota",
+        });
+        dom.inputFecha.value = hoy;
+      }
+      cargarMatriz();
+    }, 200);
+
+    return { cargarMatriz };
+  })();
+</script>
