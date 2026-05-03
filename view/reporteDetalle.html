@@ -1,107 +1,181 @@
 <style>
-  /* --- Contenedor Principal Estilo Planilla --- */
+  /* --- Estenedor Principal (Limpio y Corporativo) --- */
   .card-reporte {
     background: #ffffff !important;
     border: 1px solid #dee2e6 !important;
-    border-radius: 4px !important; /* Bordes más rectos, más serio */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     overflow: hidden;
+    margin-bottom: 20px;
   }
 
-  /* --- Encabezado Negro Superior --- */
+  /* --- Encabezado Principal (Negro Google/Chrome) --- */
   .card-header {
-    background: #212529 !important;
-    padding: 10px 20px !important;
+    background: #212529 !important; /* Negro sólido profesional */
+    padding: 15px 25px !important;
     border-bottom: none !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
+  /* Texto CONTROL ASISTENCIA: Blanco y Negrita */
   .header-title {
     color: #ffffff !important;
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-weight: 800 !important; /* Negrita extra */
+    font-size: 1.1rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
-  /* --- Tabla Principal --- */
+  /* --- Área de Filtros --- */
+  .filtro-container {
+    background: #f8f9fa;
+    padding: 15px 25px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .label-filtro {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+  }
+
+  .input-fecha-planilla {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    outline: none;
+  }
+
+  /* Botón de Búsqueda Negro Bootstrap */
+  .btn-search-dark {
+    background-color: #212529 !important;
+    border: 1px solid #212529 !important;
+    color: #ffffff !important;
+    border-radius: 6px;
+    padding: 6px 18px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-search-dark:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  /* --- Tabla Estilo Planilla (Gris Carbón) --- */
   .tabla-planilla {
     width: 100%;
     border-collapse: collapse;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
 
-  /* --- Encabezado de Columnas (Gris Carbón) --- */
   .header-labels {
-    background: #343a40 !important;
+    background: #343a40 !important; /* Gris oscuro de la imagen */
     color: #ffffff !important;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
   }
 
   .header-labels th {
-    padding: 8px 12px !important;
-    border: 1px solid #454d55 !important; /* Bordes visibles entre títulos */
+    padding: 12px 10px !important;
+    border: 1px solid #454d55 !important; /* Bordes visibles en header */
     text-align: center;
   }
 
-  /* --- Filas de Datos --- */
+  /* Filas de Datos */
   .fila-planilla {
     background: #ffffff;
     border-bottom: 1px solid #dee2e6;
   }
 
   .fila-planilla:nth-child(even) {
-    background: #f8f9fa; /* Efecto cebra para legibilidad */
+    background: #f8f9fa; /* Efecto zebra */
   }
 
   .fila-planilla:hover {
     background: #f1f3f5;
   }
 
-  .celda-datos {
-    padding: 8px 12px !important;
+  .celda-planilla {
+    padding: 10px 15px !important;
     border-right: 1px solid #dee2e6;
-    font-size: 0.85rem;
     vertical-align: middle;
   }
 
-  .nombre-txt {
+  .nombre-agente {
     color: #212529;
     font-weight: 700;
+    font-size: 0.85rem;
     text-transform: uppercase;
-  }
-
-  .id-txt {
-    color: #6c757d;
-    font-size: 0.7rem;
     display: block;
   }
 
-  /* --- Marcaciones con Badges (Estilo 'CRÉDITO') --- */
+  .id-agente {
+    color: #6c757d;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* --- Badges de Marcación (Estilo CRÉDITO) --- */
   .badge-planilla {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 4px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 800;
-    min-width: 65px;
+    min-width: 75px;
     text-align: center;
   }
 
-  /* Colores basados en la imagen de referencia */
+  /* Colores de estado */
   .status-ok {
     background: #d1e7dd;
     color: #0f5132;
-  } /* Verde suave */
+  }
   .status-tarde {
-    background: #ffc107;
+    background: #ffc107; /* Amarillo exacto de la imagen */
     color: #000000;
-  } /* Amarillo 'CRÉDITO' */
+  }
   .status-falta {
     background: #f8d7da;
     color: #842029;
-  } /* Rojo suave */
+  }
+
+  /* --- Footer / Botón Volver --- */
+  .card-footer {
+    background: #212529 !important;
+    padding: 10px !important;
+    border-top: none !important;
+  }
+
+  .btn-volver-dark {
+    background: transparent !important;
+    color: #ffffff !important;
+    border: 1px solid #444 !important;
+    width: 100%;
+    padding: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: background 0.3s;
+  }
+
+  .btn-volver-dark:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
 </style>
 
 <div class="container mt-3 mb-5">
@@ -112,9 +186,9 @@
     <div
       class="card-header bg-gradient-dark py-3 border-secondary d-flex justify-content-between align-items-center"
     >
-      <h6 class="mb-0 text-info fw-bold">
-        <i class="bi bi-person-check-fill me-2"></i>CONTROL DE ASISTENCIA
-      </h6>
+      <div class="header-title">
+        <i class="bi bi-person-check-fill me-2"></i> CONTROL DE ASISTENCIA
+      </div>
     </div>
 
     <div class="card-body p-3">
@@ -132,8 +206,8 @@
           </div>
           <div class="col-2 text-end">
             <button
+              class="btn btn-search-dark"
               onclick="nsReporteAsistencia.cargarMatriz()"
-              class="btn btn-filter w-100"
             >
               <i class="bi bi-search"></i>
             </button>
