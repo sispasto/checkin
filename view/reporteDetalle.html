@@ -79,8 +79,8 @@
 </div>
 
 <script>
-  var nsReporteAsistencia = (function () {
-    // Referencias privadas
+  // Eliminamos el "var" y lo asignamos directamente a window
+  window.nsReporteAsistencia = (function () {
     const _getDom = () => ({
       contenedor: document.getElementById("contenido-reporte"),
       loader: document.getElementById("loader-reporte"),
@@ -93,7 +93,6 @@
 
       const fechaSeleccionada = dom.inputFecha.value;
 
-      // UI Feedback: Reset e inicio de carga
       dom.loader.classList.remove("d-none");
       dom.contenedor.classList.add("d-none");
       dom.contenedor.innerHTML = "";
@@ -116,47 +115,43 @@
         if (!response.ok)
           throw new Error(result.error || "Error de comunicación");
 
-        // Caso: Sin registros
         if (!result.data || result.data.length === 0) {
           dom.contenedor.innerHTML = `
-                    <div class="text-center py-5 px-3">
-                        <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
-                        <h6 class="text-white-50">SIN REGISTROS</h6>
-                        <p class="small text-muted font-monospace">No hay marcas para el ${fechaSeleccionada}</p>
-                    </div>`;
+            <div class="text-center py-5 px-3">
+              <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
+              <h6 class="text-white-50">SIN REGISTROS</h6>
+              <p class="small text-muted font-monospace">No hay marcas para el ${fechaSeleccionada}</p>
+            </div>`;
         } else {
-          // Caso: Generación de Matriz
           let htmlAcumulado = "";
-
           result.data.forEach((p) => {
             const formatTurno = (label, data) => {
               let color = "text-ok";
               const estado = (data.estado || "").toUpperCase();
-
               if (estado === "FALTA") color = "text-falta";
               else if (estado !== "A TIEMPO" && estado !== "AL DIA")
                 color = "text-warn";
 
               return `
-                            <div class="bloque-turno">
-                                <span class="turno-label">${label}</span>
-                                <span class="turno-hora ${color}">${data.hora || "--:--"}</span>
-                            </div>`;
+                <div class="bloque-turno">
+                  <span class="turno-label">${label}</span>
+                  <span class="turno-hora ${color}">${data.hora || "--:--"}</span>
+                </div>`;
             };
 
             htmlAcumulado += `
-                        <div class="registro-agente">
-                            <div class="agente-nombre">
-                                <span>${p.info.nombre}</span>
-                                <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
-                            </div>
-                            <div class="grid-marcaciones">
-                                ${formatTurno("E1", p.e1)}
-                                ${formatTurno("S1", p.s1)}
-                                ${formatTurno("E2", p.e2)}
-                                ${formatTurno("S2", p.s2)}
-                            </div>
-                        </div>`;
+              <div class="registro-agente">
+                <div class="agente-nombre">
+                  <span>${p.info.nombre}</span>
+                  <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
+                </div>
+                <div class="grid-marcaciones">
+                  ${formatTurno("E1", p.e1)}
+                  ${formatTurno("S1", p.s1)}
+                  ${formatTurno("E2", p.e2)}
+                  ${formatTurno("S2", p.s2)}
+                </div>
+              </div>`;
           });
           dom.contenedor.innerHTML = htmlAcumulado;
         }
@@ -169,7 +164,7 @@
       }
     }
 
-    // Inicialización automática al cargar el componente
+    // Inicialización automática
     setTimeout(() => {
       const dom = _getDom();
       if (dom.inputFecha) {
@@ -179,9 +174,9 @@
         dom.inputFecha.value = hoy;
       }
       cargarMatriz();
-    }, 150);
+    }, 200);
 
-    // Exponemos el método para el botón del HTML
+    // Retornamos la función para que sea accesible vía nsReporteAsistencia.cargarMatriz()
     return { cargarMatriz };
   })();
 </script>
