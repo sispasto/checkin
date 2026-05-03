@@ -316,9 +316,6 @@ function mostrarBotonActualizacion() {
    INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", async function () {
-  // Inicializamos la DB al arrancar para que el SW no falle al intentar abrirla
-  inicializarIndexedDB().catch(console.error);
-
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./service-worker.js", {
