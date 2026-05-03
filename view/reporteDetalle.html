@@ -1,109 +1,122 @@
 <style>
-  /* --- Estructura Base --- */
+  /* --- Fondo de la página (fuera del componente) --- */
+  body {
+    background-color: #f0f2f5; /* Gris muy claro para que resalten las tarjetas blancas */
+  }
+
+  /* --- Contenedor Principal (Blanco y Limpio) --- */
   .card-reporte {
-    background: #0d1117 !important;
-    border: 1px solid #30363d !important;
-    border-radius: 12px !important;
-    overflow: hidden;
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+    color: #333 !important;
   }
 
-  .bg-gradient-dark {
-    background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+  .card-header {
+    background: #0d1117 !important; /* Mantenemos el header oscuro para que contraste */
+    border-radius: 16px 16px 0 0 !important;
+    padding: 20px !important;
   }
 
-  /* --- Filtro --- */
+  /* --- Sección de Filtro --- */
   .filtro-fecha {
-    background-color: #1c2128; /* Un gris un poco más claro para separar */
-    border: 1px solid #444c56;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
     padding: 15px;
     border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    margin-bottom: 25px;
   }
 
   .input-dark {
-    background-color: #0d1117;
-    border: 1px solid #444c56;
-    color: #adbac7;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
     font-weight: 500;
   }
 
-  /* --- Tarjetas de Agentes --- */
-  .registro-agente {
-    background: #22272e; /* Gris oxford para contraste */
-    border: 1px solid #444c56;
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 12px;
-    transition:
-      transform 0.2s,
-      border-color 0.2s;
+  .btn-filter {
+    background-color: #238636;
+    transition: all 0.3s ease;
+  }
+  .btn-filter:hover {
+    background-color: #2ea043;
+    transform: scale(1.02);
   }
 
-  .registro-agente:hover {
-    border-color: #58a6ff;
-    transform: translateY(-2px);
+  /* --- Tarjetas de Agentes (ADN Digital Style) --- */
+  .registro-agente {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   }
 
   .agente-nombre {
-    border-bottom: 1px solid #373e47;
+    border-bottom: 2px solid #f1f5f9;
     padding-bottom: 10px;
     margin-bottom: 12px;
-  }
-
-  .nombre-texto {
-    color: #58a6ff;
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-
-  /* --- Grid y Bloques --- */
-  .grid-marcaciones {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-  }
-
-  .bloque-turno {
-    background: #1c2128;
-    padding: 8px 4px;
-    border-radius: 8px;
-    border: 1px solid #373e47;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
   }
 
+  .nombre-texto {
+    color: #0f172a; /* Azul casi negro */
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  /* --- Bloques de Marcación --- */
+  .grid-marcaciones {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .bloque-turno {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 10px 5px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
   .turno-label {
-    font-size: 0.65rem;
-    color: #768390;
-    font-weight: 600;
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 700;
     margin-bottom: 4px;
+    display: block;
   }
 
   .turno-hora {
-    font-family: "JetBrains Mono", "Fira Code", monospace;
-    font-size: 0.85rem;
-    letter-spacing: -0.5px;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
   }
 
-  /* --- Colores de Estado Estilo Neon --- */
+  /* --- Colores de Estado (Sobre fondo claro) --- */
   .text-ok {
-    color: #57ab5a;
-    text-shadow: 0 0 8px rgba(87, 171, 90, 0.2);
-  }
+    color: #16a34a;
+  } /* Verde fuerte */
   .text-warn {
-    color: #c69026;
-    text-shadow: 0 0 8px rgba(198, 144, 38, 0.2);
-  }
+    color: #d97706;
+  } /* Naranja fuerte */
   .text-falta {
-    color: #e5534b;
-    text-shadow: 0 0 8px rgba(229, 83, 75, 0.2);
-  }
+    color: #dc2626;
+  } /* Rojo fuerte */
   .text-secondary {
-    color: #535f6a;
+    color: #94a3b8;
+  }
+
+  /* Footer */
+  .card-footer {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
   }
 </style>
 
@@ -226,18 +239,18 @@
             };
 
             htmlAcumulado += `
-              <div class="registro-agente">
-                <div class="agente-nombre">
-                  <span>${p.info.nombre}</span>
-                  <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
-                </div>
-                <div class="grid-marcaciones">
-                  ${formatTurno("E1", p.e1)}
-                  ${formatTurno("S1", p.s1)}
-                  ${formatTurno("E2", p.e2)}
-                  ${formatTurno("S2", p.s2)}
-                </div>
-              </div>`;
+            <div class="registro-agente">
+              <div class="agente-nombre">
+                <span class="nombre-texto">${p.info.nombre}</span>
+                <span class="text-secondary small fw-bold">ID: ${p.info.codigo}</span>
+              </div>
+              <div class="grid-marcaciones">
+                ${formatTurno("E1", p.e1)}
+                ${formatTurno("S1", p.s1)}
+                ${formatTurno("E2", p.e2)}
+                ${formatTurno("S2", p.s2)}
+              </div>
+            </div>`;
           });
           dom.contenedor.innerHTML = htmlAcumulado;
         }
