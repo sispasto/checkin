@@ -131,20 +131,39 @@
         const result = await response.json();
         if (!response.ok) throw new Error(result.error);
 
+        // --- VALIDACIÓN DE MATRIZ VACÍA ---
+        if (!result.data || result.data.length === 0) {
+          loader.classList.add("d-none");
+          contenedor.classList.remove("d-none");
+          contenedor.innerHTML = `
+            <div class="text-center py-5 px-3">
+              <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
+              <h6 class="text-white-50">SISTEMA SIN REGISTROS</h6>
+              <p class="small text-muted font-monospace">No se detectaron promotores activos para la fecha: ${FECHA_URL}</p>
+              <button onclick="window.location.hash = '#/'" class="btn btn-sm btn-outline-info mt-3">
+                VERIFICAR OTRO DÍA
+              </button>
+            </div>
+          `;
+          return; // Detenemos la ejecución aquí
+        }
+
         contenedor.innerHTML = "";
 
         result.data.forEach((p) => {
-          // Función para generar el HTML de cada turno
           const formatTurno = (label, data) => {
             let color = "text-ok";
-            if (data.estado === "FALTA") color = "text-falta";
-            else if (data.estado !== "A TIEMPO" && data.estado !== "AL DIA")
+            // Normalizamos el estado a mayúsculas para evitar errores de comparación
+            const estado = (data.estado || "").toUpperCase();
+
+            if (estado === "FALTA") color = "text-falta";
+            else if (estado !== "A TIEMPO" && estado !== "AL DIA")
               color = "text-warn";
 
             return `
               <div class="bloque-turno">
-                <span class="turno-label">\${label}</span>
-                <span class="turno-hora \${color}">\${data.hora}</span>
+                <span class="turno-label">${label}</span>
+                <span class="turno-hora ${color}">${data.hora || "--:--"}</span>
               </div>
             `;
           };
@@ -152,15 +171,15 @@
           const htmlRegistro = `
             <div class="registro-agente">
               <div class="agente-nombre">
-                <span>\${p.info.nombre}</span>
-                <span class="text-secondary" style="font-size: 10px;">ID: \${p.info.codigo}</span>
+                <span>${p.info.nombre}</span>
+                <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
               </div>
               
               <div class="grid-marcaciones">
-                \${formatTurno('E1', p.e1)}
-                \${formatTurno('S1', p.s1)}
-                \${formatTurno('E2', p.e2)}
-                \${formatTurno('S2', p.s2)}
+                ${formatTurno("E1", p.e1)}
+                ${formatTurno("S1", p.s1)}
+                ${formatTurno("E2", p.e2)}
+                ${formatTurno("S2", p.s2)}
               </div>
             </div>
           `;
@@ -171,7 +190,12 @@
         contenedor.classList.remove("d-none");
       } catch (err) {
         console.error("Error:", err);
-        loader.innerHTML = `<p class="text-danger p-4 font-monospace">Error: \${err.message}</p>`;
+        loader.innerHTML = `
+          <div class="text-center p-4">
+            <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
+            <p class="text-danger mt-2 font-monospace">ERROR_FETCH_DATA: ${err.message}</p>
+          </div>
+        `;
       }
     }
 
