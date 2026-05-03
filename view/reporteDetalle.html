@@ -1,76 +1,74 @@
 <style>
-  /* --- Fondo de la página (fuera del componente) --- */
-  body {
-    background-color: #f0f2f5; /* Gris muy claro para que resalten las tarjetas blancas */
-  }
-
-  /* --- Contenedor Principal (Blanco y Limpio) --- */
+  /* --- Contenedor Principal --- */
   .card-reporte {
-    background: #ffffff !important;
-    border: none !important;
+    background: #0d1117 !important; /* Fondo negro profundo */
+    border: 1px solid #30363d !important;
     border-radius: 16px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
-    color: #333 !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5) !important;
   }
 
+  /* --- Header --- */
   .card-header {
-    background: #0d1117 !important; /* Mantenemos el header oscuro para que contraste */
-    border-radius: 16px 16px 0 0 !important;
+    background: #161b22 !important;
+    border-bottom: 1px solid #30363d !important;
     padding: 20px !important;
   }
 
   /* --- Sección de Filtro --- */
   .filtro-fecha {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background-color: #0d1117;
+    border: 1px solid #30363d;
     padding: 15px;
     border-radius: 12px;
     margin-bottom: 25px;
   }
 
   .input-dark {
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: #1e293b;
+    background-color: #161b22;
+    border: 1px solid #444c56;
+    color: #ffffff;
     font-weight: 500;
   }
 
+  /* Botón de búsqueda NEGRO con estilo premium */
   .btn-filter {
-    background-color: #238636;
+    background-color: #000000 !important;
+    color: #58a6ff !important; /* Texto azul cian */
+    border: 1px solid #58a6ff !important;
     transition: all 0.3s ease;
-  }
-  .btn-filter:hover {
-    background-color: #2ea043;
-    transform: scale(1.02);
+    box-shadow: 0 0 10px rgba(88, 166, 255, 0.1);
   }
 
-  /* --- Tarjetas de Agentes (ADN Digital Style) --- */
+  .btn-filter:hover {
+    background-color: #58a6ff !important;
+    color: #000000 !important;
+    box-shadow: 0 0 15px rgba(88, 166, 255, 0.4);
+  }
+
+  /* --- Tarjetas de Agentes (Gris Metálico) --- */
   .registro-agente {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: #1c2128; /* Gris azulado metálico que resalta sobre el negro */
+    border: 1px solid #444c56;
     border-radius: 12px;
-    padding: 15px;
+    padding: 18px;
     margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   }
 
   .agente-nombre {
-    border-bottom: 2px solid #f1f5f9;
+    border-bottom: 1px solid #30363d;
     padding-bottom: 10px;
     margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
   .nombre-texto {
-    color: #0f172a; /* Azul casi negro */
+    color: #ffffff;
     font-size: 1rem;
     font-weight: 700;
-    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  /* --- Bloques de Marcación --- */
+  /* --- Bloques de Marcación (Fondo profundo para contraste interno) --- */
   .grid-marcaciones {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -78,45 +76,49 @@
   }
 
   .bloque-turno {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    padding: 10px 5px;
-    border-radius: 8px;
+    background: #0d1117; /* Fondo negro dentro de la tarjeta gris */
+    border: 1px solid #30363d;
+    padding: 12px 5px;
+    border-radius: 10px;
     text-align: center;
   }
 
   .turno-label {
     font-size: 0.7rem;
-    color: #64748b;
-    font-weight: 700;
+    color: #8b949e;
+    font-weight: 800;
     margin-bottom: 4px;
     display: block;
+    text-transform: uppercase;
   }
 
   .turno-hora {
-    font-family: "Segoe UI", Roboto, sans-serif;
-    font-size: 0.9rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.95rem;
     font-weight: 700;
   }
 
-  /* --- Colores de Estado (Sobre fondo claro) --- */
+  /* --- Colores de Estado --- */
   .text-ok {
-    color: #16a34a;
-  } /* Verde fuerte */
+    color: #3fb950;
+    text-shadow: 0 0 5px rgba(63, 185, 80, 0.3);
+  }
   .text-warn {
-    color: #d97706;
-  } /* Naranja fuerte */
+    color: #d29922;
+    text-shadow: 0 0 5px rgba(210, 153, 34, 0.3);
+  }
   .text-falta {
-    color: #dc2626;
-  } /* Rojo fuerte */
+    color: #f85149;
+    text-shadow: 0 0 5px rgba(248, 81, 73, 0.3);
+  }
   .text-secondary {
-    color: #94a3b8;
+    color: #484f58;
   }
 
   /* Footer */
   .card-footer {
-    background: #f8fafc !important;
-    border-top: 1px solid #e2e8f0 !important;
+    background: #000000 !important;
+    border-top: 1px solid #30363d !important;
   }
 </style>
 
