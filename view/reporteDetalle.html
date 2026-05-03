@@ -1,70 +1,73 @@
 <style>
-  /* --- Contenedor Principal (Cuerpo de la tabla) --- */
+  /* --- El Marco "Cyber" (Negro Total) --- */
   .card-reporte {
-    background: #0b0e14 !important; /* Negro profundo mate */
+    background: #000000 !important;
     border: 1px solid #1f242c !important;
-    border-radius: 16px !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
   }
 
   .card-header {
-    background: #11141b !important;
-    border-bottom: 1px solid #1f242c !important;
+    background: #000000 !important;
+    border-bottom: 2px solid #00d4ff !important; /* Línea de acento cian */
+    padding: 22px !important;
   }
 
-  /* --- Sección de Filtro --- */
+  /* --- Sección de Filtro (Elegancia Nocturna) --- */
   .filtro-fecha {
-    background-color: #161b22;
+    background-color: #0d1117;
     border: 1px solid #30363d;
-    padding: 15px;
-    border-radius: 12px;
+    padding: 18px;
+    border-radius: 15px;
+    margin-bottom: 25px;
   }
 
-  /* Botón de búsqueda Negro Estilo 'Stealth' */
+  .input-dark {
+    background-color: #000000;
+    border: 1px solid #444c56;
+    color: #00d4ff;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  /* Botón de búsqueda 'Black Ops' */
   .btn-filter {
     background-color: #000000 !important;
-    color: #00d4ff !important; /* Cian brillante */
-    border: 1px solid #1f242c !important;
-    transition: all 0.3s ease;
-    box-shadow: inset 0 0 5px rgba(0, 212, 255, 0.1);
+    color: #ffffff !important;
+    border: 1px solid #00d4ff !important;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
   }
 
-  .btn-filter:hover {
-    border-color: #00d4ff !important;
-    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
-  }
-
-  /* --- Tarjetas de Agentes (Slate / Gris Azulado) --- */
+  /* --- Tarjetas "White Pods" (El corazón del diseño) --- */
   .registro-agente {
-    background: #1c2128; /* Este color rompe el negro y da profundidad */
-    border: 1px solid #2d333b;
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
+    background: #ffffff; /* Blanco puro */
+    border: none;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   }
 
   .registro-agente:hover {
-    transform: translateY(-3px);
-    border-color: #444c56;
+    transform: scale(1.01) translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
   }
 
   .agente-nombre {
-    border-bottom: 1px solid #2d333b;
-    padding-bottom: 10px;
-    margin-bottom: 12px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 12px;
+    margin-bottom: 15px;
   }
 
   .nombre-texto {
-    color: #adbac7; /* Gris claro sedoso */
-    font-size: 0.95rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: #000000; /* Texto negro sobre fondo blanco */
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
   }
 
-  /* --- Bloques de Marcación (Negros para resaltar sobre el Slate) --- */
+  /* --- Grid de Marcación (Minimalismo Puro) --- */
   .grid-marcaciones {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -72,44 +75,46 @@
   }
 
   .bloque-turno {
-    background: #0d1117; /* Fondo negro dentro de la tarjeta gris */
-    border: 1px solid #1f242c;
-    padding: 12px 5px;
-    border-radius: 10px;
+    background: #f8f9fa; /* Gris casi imperceptible */
+    border: 1px solid #eaeaea;
+    padding: 12px 4px;
+    border-radius: 12px;
     text-align: center;
   }
 
   .turno-label {
-    font-size: 0.65rem;
-    color: #768390;
-    font-weight: 700;
-    margin-bottom: 4px;
+    font-size: 0.7rem;
+    color: #a0a0a0;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 5px;
     display: block;
   }
 
   .turno-hora {
     font-family: "JetBrains Mono", monospace;
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 900;
+    color: #000000;
   }
 
-  /* --- Colores de Estado --- */
+  /* --- Colores de Estado (Vibrantes sobre blanco) --- */
   .text-ok {
-    color: #3fb950;
-  } /* Verde Esmeralda */
+    color: #00c853 !important;
+  } /* Verde Neón */
   .text-warn {
-    color: #d29922;
+    color: #ffab00 !important;
   } /* Ámbar */
   .text-falta {
-    color: #f85149;
-  } /* Rojo Coral */
+    color: #ff1744 !important;
+  } /* Rojo Eléctrico */
   .text-secondary {
-    color: #444c56;
+    color: #d0d0d0;
   }
 
   /* Footer */
   .card-footer {
-    background: #080a0e !important;
+    background: #000000 !important;
     border-top: 1px solid #1f242c !important;
   }
 </style>
