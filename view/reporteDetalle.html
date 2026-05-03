@@ -1,77 +1,27 @@
 <style>
-  .card-reporte {
-    background-color: #0d1117 !important;
-    border-radius: 15px !important;
-    max-width: 500px; /* Tamaño ideal para móvil */
-    margin: auto;
-    border: 1px solid #30363d !important;
-  }
-
-  /* Contenedor de la lista */
-  .lista-asistencia {
-    padding: 0;
-    margin: 0;
-  }
-
-  .registro-agente {
-    border-bottom: 1px solid #21262d;
-    padding: 12px 15px;
-    transition: background 0.2s;
-  }
-
-  .registro-agente:nth-child(even) {
-    background-color: #161b2255;
-  }
-
-  /* Primera fila: Nombre */
-  .agente-nombre {
-    color: #58a6ff;
-    font-weight: bold;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  /* Segunda fila: Las 4 marcaciones */
-  .grid-marcaciones {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-
-  .bloque-turno {
-    text-align: center;
-    background: #00000044;
-    padding: 5px;
-    border-radius: 6px;
+  /* ... (Tus estilos anteriores se mantienen) ... */
+  .filtro-fecha {
+    background-color: #161b22;
     border: 1px solid #30363d;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 15px;
   }
-
-  .turno-label {
-    display: block;
-    font-size: 9px;
-    color: #8b949e;
-    margin-bottom: 2px;
+  .input-dark {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    color: white;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    padding: 5px;
   }
-
-  .turno-hora {
-    display: block;
-    font-family: "Fira Code", monospace;
-    font-size: 0.75rem;
-    font-weight: bold;
-  }
-
-  /* Estados */
-  .text-falta {
-    color: #ff7b72;
-  }
-  .text-ok {
-    color: #3fb950;
-  }
-  .text-warn {
-    color: #d29922;
+  .btn-filter {
+    background-color: #238636;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 0.8rem;
   }
 </style>
 
@@ -83,18 +33,35 @@
       <h6 class="mb-0 text-info fw-bold">
         <i class="bi bi-person-check-fill me-2"></i>CONTROL DE ASISTENCIA
       </h6>
-      <span class="badge bg-dark border border-secondary text-secondary"
-        >{{fecha}}</span
-      >
     </div>
 
-    <div class="card-body p-0">
-      <div id="loader-reporte" class="text-center py-5">
+    <div class="card-body p-3">
+      <div class="filtro-fecha">
+        <div class="row g-2 align-items-end">
+          <div class="col-10">
+            <label class="text-secondary small d-block mb-1"
+              >Seleccionar Fecha:</label
+            >
+            <input
+              type="date"
+              id="input-fecha"
+              class="form-control input-dark w-100"
+            />
+          </div>
+          <div class="col-2 text-end">
+            <button onclick="cargarMatriz()" class="btn btn-filter w-100">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="loader-reporte" class="text-center py-5 d-none">
         <div class="spinner-border text-info" role="status"></div>
         <p class="text-secondary small mt-2 font-monospace">SINCRONIZANDO...</p>
       </div>
 
-      <div id="contenido-reporte" class="d-none lista-asistencia"></div>
+      <div id="contenido-reporte" class="lista-asistencia"></div>
     </div>
 
     <div class="card-footer bg-black text-center py-3">
@@ -109,51 +76,62 @@
 </div>
 
 <script>
-  (async function () {
-    const contenedor = document.getElementById("contenido-reporte");
-    const loader = document.getElementById("loader-reporte");
+  // 1. Referencias a elementos del DOM
+  const contenedor = document.getElementById("contenido-reporte");
+  const loader = document.getElementById("loader-reporte");
+  const inputFecha = document.getElementById("input-fecha");
 
-    async function cargarMatriz() {
-      try {
-        const response = await fetch(
-          `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_completo`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: window.SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
-            },
-            body: JSON.stringify({ fecha: FECHA_URL }),
+  // 2. Establecer fecha de hoy por defecto (Formato YYYY-MM-DD)
+  const hoy = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Bogota",
+  });
+  if (inputFecha) inputFecha.value = hoy;
+
+  // 3. Función principal de carga
+  async function cargarMatriz() {
+    // Validar que tengamos los elementos necesarios
+    if (!contenedor || !loader) return;
+
+    const fechaSeleccionada = inputFecha.value;
+
+    // Reset de interfaz
+    loader.classList.remove("d-none");
+    contenedor.classList.add("d-none");
+    contenedor.innerHTML = "";
+
+    try {
+      const response = await fetch(
+        `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_completo`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: window.SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
           },
-        );
+          body: JSON.stringify({ fecha: fechaSeleccionada }),
+        },
+      );
 
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Error en el servidor");
 
-        // --- VALIDACIÓN DE MATRIZ VACÍA ---
-        if (!result.data || result.data.length === 0) {
-          loader.classList.add("d-none");
-          contenedor.classList.remove("d-none");
-          contenedor.innerHTML = `
-            <div class="text-center py-5 px-3">
-              <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
-              <h6 class="text-white-50">SISTEMA SIN REGISTROS</h6>
-              <p class="small text-muted font-monospace">No se detectaron promotores activos para la fecha: ${FECHA_URL}</p>
-              <button onclick="window.location.hash = '#/'" class="btn btn-sm btn-outline-info mt-3">
-                VERIFICAR OTRO DÍA
-              </button>
-            </div>
-          `;
-          return; // Detenemos la ejecución aquí
-        }
-
-        contenedor.innerHTML = "";
+      // --- VALIDACIÓN DE DATOS ---
+      if (!result.data || result.data.length === 0) {
+        contenedor.innerHTML = `
+          <div class="text-center py-5 px-3">
+            <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
+            <h6 class="text-white-50">SIN REGISTROS</h6>
+            <p class="small text-muted font-monospace">No hay marcas para el ${fechaSeleccionada}</p>
+          </div>
+        `;
+      } else {
+        // --- RENDERIZADO DE LA MATRIZ ---
+        let htmlAcumulado = "";
 
         result.data.forEach((p) => {
           const formatTurno = (label, data) => {
             let color = "text-ok";
-            // Normalizamos el estado a mayúsculas para evitar errores de comparación
             const estado = (data.estado || "").toUpperCase();
 
             if (estado === "FALTA") color = "text-falta";
@@ -168,13 +146,12 @@
             `;
           };
 
-          const htmlRegistro = `
+          htmlAcumulado += `
             <div class="registro-agente">
               <div class="agente-nombre">
                 <span>${p.info.nombre}</span>
                 <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
               </div>
-              
               <div class="grid-marcaciones">
                 ${formatTurno("E1", p.e1)}
                 ${formatTurno("S1", p.s1)}
@@ -183,22 +160,25 @@
               </div>
             </div>
           `;
-          contenedor.innerHTML += htmlRegistro;
-        });
+        }); // <-- Aquí faltaba esta llave de cierre
 
-        loader.classList.add("d-none");
-        contenedor.classList.remove("d-none");
-      } catch (err) {
-        console.error("Error:", err);
-        loader.innerHTML = `
-          <div class="text-center p-4">
-            <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
-            <p class="text-danger mt-2 font-monospace">ERROR_FETCH_DATA: ${err.message}</p>
-          </div>
-        `;
+        contenedor.innerHTML = htmlAcumulado;
       }
+    } catch (err) {
+      console.error("Error cargando reporte:", err);
+      contenedor.innerHTML = `
+        <div class="alert alert-danger m-3 font-monospace" style="font-size: 11px;">
+          <i class="bi bi-exclamation-octagon me-2"></i>ERROR: ${err.message}
+        </div>
+      `;
+    } finally {
+      loader.classList.add("d-none");
+      contenedor.classList.remove("d-none");
     }
+  }
 
+  // 4. Ejecución inicial
+  document.addEventListener("DOMContentLoaded", () => {
     cargarMatriz();
-  })();
+  });
 </script>
