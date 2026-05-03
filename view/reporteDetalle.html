@@ -1,121 +1,155 @@
 <style>
-  /* --- El Marco "Cyber" (Negro Total) --- */
+  /* --- Contenedor Principal (Profundidad Absoluta) --- */
   .card-reporte {
     background: #000000 !important;
-    border: 1px solid #1f242c !important;
-    border-radius: 20px !important;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid #1a1d23 !important;
+    border-radius: 24px !important;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9) !important;
+    padding: 10px;
   }
 
   .card-header {
-    background: #000000 !important;
-    border-bottom: 2px solid #00d4ff !important; /* Línea de acento cian */
-    padding: 22px !important;
+    background: transparent !important;
+    border-bottom: 1px solid #1a1d23 !important;
+    padding: 25px !important;
   }
 
-  /* --- Sección de Filtro (Elegancia Nocturna) --- */
+  /* --- El 'Input' de Fecha Estilo Terminal --- */
   .filtro-fecha {
-    background-color: #0d1117;
-    border: 1px solid #30363d;
-    padding: 18px;
-    border-radius: 15px;
-    margin-bottom: 25px;
+    background-color: #080a0f;
+    border: 1px solid #1a1d23;
+    padding: 20px;
+    border-radius: 18px;
+    margin-bottom: 30px;
   }
 
   .input-dark {
-    background-color: #000000;
-    border: 1px solid #444c56;
-    color: #00d4ff;
-    font-weight: bold;
-    text-align: center;
-  }
-
-  /* Botón de búsqueda 'Black Ops' */
-  .btn-filter {
     background-color: #000000 !important;
-    color: #ffffff !important;
-    border: 1px solid #00d4ff !important;
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+    border: 1px solid #30363d !important;
+    color: #00d4ff !important;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 10px !important;
+    transition: all 0.3s;
   }
 
-  /* --- Tarjetas "White Pods" (El corazón del diseño) --- */
+  .input-dark:focus {
+    border-color: #00d4ff !important;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+  }
+
+  /* Botón de búsqueda Minimalista */
+  .btn-filter {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .btn-filter:hover {
+    transform: scale(1.05);
+    background-color: #00d4ff !important;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+  }
+
+  /* --- Tarjetas 'White-Glass' de Agentes --- */
   .registro-agente {
-    background: #ffffff; /* Blanco puro */
+    background: #ffffff;
     border: none;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 18px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 20px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
   }
 
+  /* Efecto de borde de luz al pasar el mouse */
   .registro-agente:hover {
-    transform: scale(1.01) translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 212, 255, 0.15);
   }
 
   .agente-nombre {
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 12px;
-    margin-bottom: 15px;
+    border-bottom: 2px solid #f4f6f8;
+    padding-bottom: 15px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .nombre-texto {
-    color: #000000; /* Texto negro sobre fondo blanco */
+    color: #0d1117;
     font-size: 1.1rem;
     font-weight: 900;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.8px;
   }
 
-  /* --- Grid de Marcación (Minimalismo Puro) --- */
+  /* --- Grid de Marcación Estilo 'Pods' --- */
   .grid-marcaciones {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 15px;
   }
 
   .bloque-turno {
-    background: #f8f9fa; /* Gris casi imperceptible */
-    border: 1px solid #eaeaea;
-    padding: 12px 4px;
-    border-radius: 12px;
+    background: #f8fafc; /* Gris nube sutil */
+    border: 1px solid #edf2f7;
+    padding: 15px 5px;
+    border-radius: 15px;
     text-align: center;
+    transition: all 0.3s;
+  }
+
+  .registro-agente:hover .bloque-turno {
+    background: #ffffff;
+    border-color: #e2e8f0;
   }
 
   .turno-label {
-    font-size: 0.7rem;
-    color: #a0a0a0;
+    font-size: 0.65rem;
+    color: #94a3b8;
     font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 5px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
     display: block;
   }
 
   .turno-hora {
     font-family: "JetBrains Mono", monospace;
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 900;
-    color: #000000;
+    color: #1e293b;
   }
 
-  /* --- Colores de Estado (Vibrantes sobre blanco) --- */
+  /* --- Status Colors --- */
   .text-ok {
-    color: #00c853 !important;
-  } /* Verde Neón */
+    color: #10b981 !important;
+  } /* Esmeralda */
   .text-warn {
-    color: #ffab00 !important;
+    color: #f59e0b !important;
   } /* Ámbar */
   .text-falta {
-    color: #ff1744 !important;
-  } /* Rojo Eléctrico */
-  .text-secondary {
-    color: #d0d0d0;
+    color: #ef4444 !important;
+  } /* Rosa Eléctrico */
+
+  /* Footer Minimal */
+  .card-footer {
+    background: transparent !important;
+    border-top: 1px solid #1a1d23 !important;
+    padding: 25px !important;
   }
 
-  /* Footer */
-  .card-footer {
-    background: #000000 !important;
-    border-top: 1px solid #1f242c !important;
+  .btn-outline-secondary {
+    border-color: #30363d !important;
+    color: #8b949e !important;
+    border-radius: 12px;
   }
 </style>
 
