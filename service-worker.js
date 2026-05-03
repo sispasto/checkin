@@ -1,42 +1,7 @@
-const APP_VERSION = "2.0"; // Subimos versión por el cambio estructural
+const APP_VERSION = "2.1"; // Subimos versión por el cambio estructural
 const CACHE_NAME = `asist-app-cache-v${APP_VERSION}`;
 
 // --- LÓGICA DE NOTIFICACIONES SIMPLIFICADA ---
-
-async function procesarNotificacionPush(event) {
-  let data = {
-    title: "SISTEMA DE ASISTENCIA",
-    body: "Nueva novedad registrada",
-    url: "/checkin/index.html"
-  };
-
-  try {
-    if (event.data) {
-      // Importante: Asegúrate de que el servidor envíe un JSON válido
-      data = event.data.json();
-    }
-  } catch (e) {
-    console.error("Error parseando JSON del Push", e);
-  }
-
-  const options = {
-    body: data.body,
-    icon: "/checkin/assets/icon_push-192x192.png",
-    badge: "/checkin/assets/badge.png",
-    vibrate: [300, 150, 300, 150, 500],
-    tag: "Asistencia-alerta", // Esto evita que se acumulen 100 notificaciones
-    renotify: true,
-    requireInteraction: true,
-    data: {
-      url: data.url || "/checkin/index.html",
-    },
-  };
-
-  // ¡CRÍTICO! Retornar la promesa de showNotification
-  return self.registration.showNotification(data.title, options);
-}
-
-// --- EVENTOS DEL SERVICE WORKER ---
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -68,8 +33,33 @@ self.addEventListener("activate", (e) => {
 
 // ESCUCHA DE PUSH (Ya no valida admin, confía en el servidor)
 self.addEventListener("push", (event) => {
+  // NO uses una función externa async aparte si no retorna la promesa correctamente
   event.waitUntil(procesarNotificacionPush(event));
 });
+
+async function procesarNotificacionPush(event) {
+  let data = { title: "SISTEMA", body: "Novedad" };
+  try {
+    data = event.data ? event.data.json() : data;
+  } catch (e) {
+    console.error(e);
+  }
+
+  // IMPORTANTE: El 'tag' es lo que agrupa y evita duplicados
+  const options = {
+    body: data.body,
+    icon: "/checkin/assets/icon_push-192x192.png",
+    badge: "/checkin/assets/badge.png",
+    tag: "reporte-asistencia", // <--- Mismo tag siempre
+    renotify: true,
+    data: {
+      url: data.url || "/checkin/index.html",
+    },
+  };
+
+  // ESTA LÍNEA es la que calla a Chrome
+  return self.registration.showNotification(data.title, options);
+}
 
 // CLICK EN NOTIFICACIÓN
 // CLICK EN NOTIFICACIÓN - Versión Corregida
