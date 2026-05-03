@@ -7,10 +7,12 @@ async function procesarNotificacionPush(event) {
   let data = {
     title: "SISTEMA DE ASISTENCIA",
     body: "Nueva novedad registrada",
+    url: "/checkin/index.html"
   };
 
   try {
     if (event.data) {
+      // Importante: Asegúrate de que el servidor envíe un JSON válido
       data = event.data.json();
     }
   } catch (e) {
@@ -22,14 +24,15 @@ async function procesarNotificacionPush(event) {
     icon: "/checkin/assets/icon_push-192x192.png",
     badge: "/checkin/assets/badge.png",
     vibrate: [300, 150, 300, 150, 500],
-    tag: "Asistencia-alerta",
+    tag: "Asistencia-alerta", // Esto evita que se acumulen 100 notificaciones
     renotify: true,
-    requireInteraction: true, // Se mantiene hasta que el usuario la gestione
+    requireInteraction: true,
     data: {
       url: data.url || "/checkin/index.html",
     },
   };
 
+  // ¡CRÍTICO! Retornar la promesa de showNotification
   return self.registration.showNotification(data.title, options);
 }
 
