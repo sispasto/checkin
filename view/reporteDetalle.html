@@ -1,5 +1,5 @@
 <style>
-  /* ... (Tus estilos anteriores se mantienen) ... */
+  /* --- Estilos de la Interfaz --- */
   .filtro-fecha {
     background-color: #161b22;
     border: 1px solid #30363d;
@@ -23,10 +23,67 @@
     border-radius: 5px;
     font-size: 0.8rem;
   }
+
+  /* --- Estilos de la Matriz de Agentes (FALTABAN ESTOS) --- */
+  .registro-agente {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .agente-nombre {
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #58a6ff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .grid-marcaciones {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas iguales */
+    gap: 8px;
+  }
+  .bloque-turno {
+    background: #0d1117;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #21262d;
+    text-align: center;
+  }
+  .turno-label {
+    display: block;
+    font-size: 9px;
+    color: #8b949e;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .turno-hora {
+    font-family: "monospace";
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  /* --- Colores de Estado --- */
+  .text-ok {
+    color: #3fb950;
+  } /* Verde */
+  .text-warn {
+    color: #d29922;
+  } /* Naranja */
+  .text-falta {
+    color: #f85149;
+  } /* Rojo */
 </style>
 
 <div class="container mt-3 mb-5">
-  <div class="card card-reporte text-white shadow-lg">
+  <div
+    class="card card-reporte text-white shadow-lg"
+    style="background: #0d1117"
+  >
     <div
       class="card-header bg-gradient-dark py-3 border-secondary d-flex justify-content-between align-items-center"
     >
@@ -79,7 +136,6 @@
 </div>
 
 <script>
-  // Eliminamos el "var" y lo asignamos directamente a window
   window.nsReporteAsistencia = (function () {
     const _getDom = () => ({
       contenedor: document.getElementById("contenido-reporte"),
@@ -99,7 +155,7 @@
 
       try {
         const response = await fetch(
-          `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_detalle`,
+          `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_detalle`, // Asegúrate que el nombre sea correcto
           {
             method: "POST",
             headers: {
@@ -128,9 +184,11 @@
             const formatTurno = (label, data) => {
               let color = "text-ok";
               const estado = (data.estado || "").toUpperCase();
+
               if (estado === "FALTA") color = "text-falta";
+              else if (estado === "TARDE") color = "text-warn";
               else if (estado !== "A TIEMPO" && estado !== "AL DIA")
-                color = "text-warn";
+                color = "text-secondary";
 
               return `
                 <div class="bloque-turno">
@@ -164,7 +222,6 @@
       }
     }
 
-    // Inicialización automática
     setTimeout(() => {
       const dom = _getDom();
       if (dom.inputFecha) {
@@ -176,7 +233,6 @@
       cargarMatriz();
     }, 200);
 
-    // Retornamos la función para que sea accesible vía nsReporteAsistencia.cargarMatriz()
     return { cargarMatriz };
   })();
 </script>
