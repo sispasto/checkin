@@ -1,119 +1,107 @@
 <style>
-  /* --- Variables de Color Chrome --- */
-  :root {
-    --chrome-blue: #1a73e8; /* Azul característico de Chrome */
-    --chrome-blue-dark: #174ea6;
-    --bg-glass: rgba(255, 255, 255, 0.95);
-    --border-light: #dadce0; /* Gris de bordes de Google */
-  }
-
-  /* --- Contenedor Principal --- */
+  /* --- Contenedor Principal Estilo Planilla --- */
   .card-reporte {
-    background: var(--bg-glass) !important;
-    border: 1px solid var(--border-light) !important;
-    border-radius: 12px !important; /* Bordes ligeramente más rectos estilo Chrome */
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 4px !important; /* Bordes más rectos, más serio */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
     overflow: hidden;
   }
 
-  /* --- Encabezado Azul Chrome --- */
+  /* --- Encabezado Negro Superior --- */
   .card-header {
-    background: var(--chrome-blue) !important;
-    padding: 15px 25px !important;
+    background: #212529 !important;
+    padding: 10px 20px !important;
     border-bottom: none !important;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
   .header-title {
     color: #ffffff !important;
-    font-family: "Google Sans", "Segoe UI", Roboto, sans-serif;
-    font-weight: 500;
-    font-size: 1.1rem;
-    letter-spacing: 0.2px;
-  }
-
-  /* --- Filtro de Fecha --- */
-  .input-fecha-chrome {
-    background: rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: #ffffff !important;
-    border-radius: 8px;
-    padding: 4px 12px;
     font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  /* --- Estructura de Tabla --- */
-  .tabla-asistencia {
+  /* --- Tabla Principal --- */
+  .tabla-planilla {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
 
+  /* --- Encabezado de Columnas (Gris Carbón) --- */
   .header-labels {
-    background: var(--chrome-blue) !important;
-    color: #ffffff;
+    background: #343a40 !important;
+    color: #ffffff !important;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
   }
 
   .header-labels th {
-    padding: 10px 15px;
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 12px !important;
+    border: 1px solid #454d55 !important; /* Bordes visibles entre títulos */
+    text-align: center;
   }
 
-  /* --- Filas de Agentes --- */
-  .fila-agente {
-    border-bottom: 1px solid var(--border-light);
-    transition: background 0.2s;
+  /* --- Filas de Datos --- */
+  .fila-planilla {
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
   }
 
-  .fila-agente:hover {
-    background: #f8f9fa;
+  .fila-planilla:nth-child(even) {
+    background: #f8f9fa; /* Efecto cebra para legibilidad */
   }
 
-  .agente-info {
-    padding: 12px 25px !important;
+  .fila-planilla:hover {
+    background: #f1f3f5;
+  }
+
+  .celda-datos {
+    padding: 8px 12px !important;
+    border-right: 1px solid #dee2e6;
+    font-size: 0.85rem;
+    vertical-align: middle;
   }
 
   .nombre-txt {
-    color: #202124; /* Negro Google */
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: block;
+    color: #212529;
+    font-weight: 700;
+    text-transform: uppercase;
   }
 
   .id-txt {
-    color: #5f6368;
+    color: #6c757d;
+    font-size: 0.7rem;
+    display: block;
+  }
+
+  /* --- Marcaciones con Badges (Estilo 'CRÉDITO') --- */
+  .badge-planilla {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
     font-size: 0.75rem;
-  }
-
-  /* --- Cajas de Marcación --- */
-  .caja-chrome {
-    border-radius: 8px;
-    padding: 8px;
-    min-width: 80px;
+    font-weight: 800;
+    min-width: 65px;
     text-align: center;
-    font-family: "Roboto Mono", monospace;
-    font-size: 0.85rem;
-    border: 1px solid #e8eaed;
-    background: #ffffff;
   }
 
-  .hora-vacia {
-    color: #d93025; /* Rojo Google */
-    border-color: #fad2cf;
-    background: #fef7f6;
-  }
-
-  .hora-ok {
-    color: #188038; /* Verde Google */
-    border-color: #ceead6;
-    background: #e6f4ea;
-  }
+  /* Colores basados en la imagen de referencia */
+  .status-ok {
+    background: #d1e7dd;
+    color: #0f5132;
+  } /* Verde suave */
+  .status-tarde {
+    background: #ffc107;
+    color: #000000;
+  } /* Amarillo 'CRÉDITO' */
+  .status-falta {
+    background: #f8d7da;
+    color: #842029;
+  } /* Rojo suave */
 </style>
 
 <div class="container mt-3 mb-5">
@@ -217,13 +205,14 @@
             </div>`;
         } else {
           // --- CONSTRUCCIÓN DE LA TABLA "SOFT-CLEAN" ---
-          // ... dentro del else de cargarMatriz ...
+          // ... dentro del bloque else donde result.data.length !== 0 ...
+
           let htmlAcumulado = `
           <div class="table-responsive">
-            <table class="tabla-asistencia">
+            <table class="tabla-planilla">
               <thead>
-                <tr class="header-labels text-center">
-                  <th class="text-start ps-5">Nombre Completo</th>
+                <tr class="header-labels">
+                  <th class="text-start ps-4">NOMBRE COMPLETO / ID</th>
                   <th>E1</th>
                   <th>S1</th>
                   <th>E2</th>
@@ -234,31 +223,37 @@
         `;
 
           result.data.forEach((p) => {
-            const renderMarca = (obj) => {
-              const esFalta =
-                obj.hora === "--:--" ||
-                (obj.estado || "").toUpperCase() === "FALTA";
-              const claseStatus = esFalta ? "hora-vacia" : "hora-ok";
+            // Función para renderizar cada celda de tiempo con el estilo de badge
+            const formatBadge = (obj) => {
+              let claseStatus = "status-ok";
+              const estado = (obj.estado || "").toUpperCase();
+
+              if (estado === "FALTA" || obj.hora === "--:--") {
+                claseStatus = "status-falta";
+              } else if (estado === "TARDE") {
+                claseStatus = "status-tarde";
+              }
+
               return `
-              <td class="text-center">
-                <div class="caja-chrome ${claseStatus}">
+              <td class="celda-datos text-center">
+                <span class="badge-planilla ${claseStatus}">
                   ${obj.hora || "--:--"}
-                </div>
+                </span>
               </td>`;
             };
 
             htmlAcumulado += `
-              <tr class="fila-agente">
-                <td class="agente-info">
-                  <span class="nombre-txt">${p.info.nombre}</span>
-                  <span class="id-txt">ID: ${p.info.codigo}</span>
-                </td>
-                ${renderMarca(p.e1)}
-                ${renderMarca(p.s1)}
-                ${renderMarca(p.e2)}
-                ${renderMarca(p.s2)}
-              </tr>
-            `;
+            <tr class="fila-planilla">
+              <td class="celda-datos ps-4">
+                <span class="nombre-txt">${p.info.nombre}</span>
+                <span class="id-txt">ID: ${p.info.codigo}</span>
+              </td>
+              ${formatBadge(p.e1)}
+              ${formatBadge(p.s1)}
+              ${formatBadge(p.e2)}
+              ${formatBadge(p.s2)}
+            </tr>
+          `;
           });
 
           htmlAcumulado += `</tbody></table></div>`;
