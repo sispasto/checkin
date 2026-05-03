@@ -359,8 +359,6 @@
         if (response.ok && result.status === "success") {
           if (result.device_token_id) {
             localStorage.setItem("device_token_id", result.device_token_id);
-            // 🔑 TU ARMA SECRETA: Guardar en IndexedDB para el Service Worker
-            await autorizarComoAdmin(result.device_token_id);
           }
 
           if (result.tipoHW !== undefined) {
