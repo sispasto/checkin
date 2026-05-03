@@ -1,4 +1,4 @@
-const APP_VERSION = "2.1"; // Subimos versión por el cambio estructural
+const APP_VERSION = "2.2"; // Subimos versión por el cambio estructural
 const CACHE_NAME = `asist-app-cache-v${APP_VERSION}`;
 
 // --- LÓGICA DE NOTIFICACIONES SIMPLIFICADA ---
@@ -61,7 +61,6 @@ async function procesarNotificacionPush(event) {
   return self.registration.showNotification(data.title, options);
 }
 
-// CLICK EN NOTIFICACIÓN
 // CLICK EN NOTIFICACIÓN - Versión Corregida
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
