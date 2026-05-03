@@ -1,24 +1,25 @@
 <style>
+  /* --- Variables de Color Chrome --- */
+  :root {
+    --chrome-blue: #1a73e8; /* Azul característico de Chrome */
+    --chrome-blue-dark: #174ea6;
+    --bg-glass: rgba(255, 255, 255, 0.95);
+    --border-light: #dadce0; /* Gris de bordes de Google */
+  }
+
   /* --- Contenedor Principal --- */
   .card-reporte {
-    background: rgba(
-      255,
-      255,
-      255,
-      0.7
-    ) !important; /* Fondo claro traslúcido */
-    backdrop-filter: blur(15px) saturate(150%);
-    -webkit-backdrop-filter: blur(15px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+    background: var(--bg-glass) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: 12px !important; /* Bordes ligeramente más rectos estilo Chrome */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
     overflow: hidden;
   }
 
-  /* --- Encabezado Azul Sólido --- */
+  /* --- Encabezado Azul Chrome --- */
   .card-header {
-    background: #0047c7 !important; /* Azul intenso de la imagen */
-    padding: 20px 25px !important;
+    background: var(--chrome-blue) !important;
+    padding: 15px 25px !important;
     border-bottom: none !important;
     display: flex;
     justify-content: space-between;
@@ -27,91 +28,91 @@
 
   .header-title {
     color: #ffffff !important;
-    font-weight: 700;
+    font-family: "Google Sans", "Segoe UI", Roboto, sans-serif;
+    font-weight: 500;
     font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    letter-spacing: 0.2px;
   }
 
-  /* --- Filtro de Fecha (Integrado en Header) --- */
-  .input-fecha-glass {
-    background: rgba(255, 255, 255, 0.15) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  /* --- Filtro de Fecha --- */
+  .input-fecha-chrome {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     color: #ffffff !important;
-    border-radius: 10px;
-    padding: 5px 15px;
-    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 0.9rem;
   }
 
   /* --- Estructura de Tabla --- */
   .tabla-asistencia {
     width: 100%;
     border-collapse: collapse;
+    background: white;
   }
 
   .header-labels {
-    background: #0056ed !important; /* Un azul un poco más claro para los títulos */
+    background: var(--chrome-blue) !important;
     color: #ffffff;
-    text-transform: uppercase;
     font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
+    font-weight: 600;
+    text-transform: uppercase;
   }
 
   .header-labels th {
-    padding: 12px 15px;
+    padding: 10px 15px;
     border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   /* --- Filas de Agentes --- */
   .fila-agente {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    transition: background 0.3s;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.2s;
   }
 
   .fila-agente:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: #f8f9fa;
   }
 
   .agente-info {
-    padding: 15px 25px !important;
+    padding: 12px 25px !important;
   }
 
   .nombre-txt {
-    color: #1e293b;
-    font-weight: 700;
+    color: #202124; /* Negro Google */
+    font-weight: 600;
     font-size: 0.9rem;
     display: block;
   }
 
   .id-txt {
-    color: #64748b;
+    color: #5f6368;
     font-size: 0.75rem;
-    font-weight: 600;
   }
 
   /* --- Cajas de Marcación --- */
-  .caja-vacia {
-    color: #ef4444; /* Rojo suave */
-    font-weight: 700;
-    border: 1px solid rgba(239, 68, 68, 0.15);
-    background: rgba(239, 68, 68, 0.02);
-  }
-
-  .caja-ok {
-    color: #10b981; /* Verde esmeralda */
-    font-weight: 700;
-    border: 1px solid rgba(16, 185, 129, 0.15);
-    background: rgba(16, 185, 129, 0.02);
-  }
-
-  .caja-discreta {
-    border-radius: 10px;
-    padding: 10px;
-    min-width: 85px;
+  .caja-chrome {
+    border-radius: 8px;
+    padding: 8px;
+    min-width: 80px;
     text-align: center;
-    font-family: "Inter", sans-serif;
+    font-family: "Roboto Mono", monospace;
+    font-size: 0.85rem;
+    border: 1px solid #e8eaed;
+    background: #ffffff;
+  }
+
+  .hora-vacia {
+    color: #d93025; /* Rojo Google */
+    border-color: #fad2cf;
+    background: #fef7f6;
+  }
+
+  .hora-ok {
+    color: #188038; /* Verde Google */
+    border-color: #ceead6;
+    background: #e6f4ea;
   }
 </style>
 
@@ -218,29 +219,29 @@
           // --- CONSTRUCCIÓN DE LA TABLA "SOFT-CLEAN" ---
           // ... dentro del else de cargarMatriz ...
           let htmlAcumulado = `
-            <div class="table-responsive">
-              <table class="tabla-asistencia">
-                <thead>
-                  <tr class="header-labels text-center">
-                    <th class="text-start ps-5">NOMBRE COMPLETO</th>
-                    <th>E1</th>
-                    <th>S1</th>
-                    <th>E2</th>
-                    <th>S2</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
+          <div class="table-responsive">
+            <table class="tabla-asistencia">
+              <thead>
+                <tr class="header-labels text-center">
+                  <th class="text-start ps-5">Nombre Completo</th>
+                  <th>E1</th>
+                  <th>S1</th>
+                  <th>E2</th>
+                  <th>S2</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
 
           result.data.forEach((p) => {
             const renderMarca = (obj) => {
               const esFalta =
                 obj.hora === "--:--" ||
                 (obj.estado || "").toUpperCase() === "FALTA";
-              const claseStatus = esFalta ? "caja-vacia" : "caja-ok";
+              const claseStatus = esFalta ? "hora-vacia" : "hora-ok";
               return `
               <td class="text-center">
-                <div class="caja-discreta ${claseStatus}">
+                <div class="caja-chrome ${claseStatus}">
                   ${obj.hora || "--:--"}
                 </div>
               </td>`;
