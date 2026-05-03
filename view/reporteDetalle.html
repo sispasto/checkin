@@ -257,22 +257,21 @@
           // ... dentro del bloque else donde result.data.length !== 0 ...
 
           let htmlAcumulado = `
-          <div class="table-responsive">
-            <table class="tabla-planilla">
-              <thead>
-                <tr class="header-labels">
-                  <th class="text-start ps-4">NOMBRE COMPLETO / ID</th>
-                  <th>E1</th>
-                  <th>S1</th>
-                  <th>E2</th>
-                  <th>S2</th>
-                </tr>
-              </thead>
-              <tbody>
-        `;
+    <div class="table-responsive">
+      <table class="tabla-planilla">
+        <thead>
+          <tr class="header-labels">
+            <th class="text-start ps-4">NOMBRE COMPLETO / ID</th>
+            <th>E1</th>
+            <th>S1</th>
+            <th>E2</th>
+            <th>S2</th>
+          </tr>
+        </thead>
+        <tbody>
+`;
 
           result.data.forEach((p) => {
-            // Función para renderizar cada celda de tiempo con el estilo de badge
             const formatBadge = (obj) => {
               let claseStatus = "status-ok";
               const estado = (obj.estado || "").toUpperCase();
@@ -284,25 +283,25 @@
               }
 
               return `
-              <td class="celda-datos text-center">
-                <span class="badge-planilla ${claseStatus}">
-                  ${obj.hora || "--:--"}
-                </span>
-              </td>`;
+      <td class="celda-planilla text-center">
+        <span class="badge-planilla ${claseStatus}">
+          ${obj.hora || "--:--"}
+        </span>
+      </td>`;
             };
 
             htmlAcumulado += `
-            <tr class="fila-planilla">
-              <td class="celda-datos ps-4">
-                <span class="nombre-txt">${p.info.nombre}</span>
-                <span class="id-txt">ID: ${p.info.codigo}</span>
-              </td>
-              ${formatBadge(p.e1)}
-              ${formatBadge(p.s1)}
-              ${formatBadge(p.e2)}
-              ${formatBadge(p.s2)}
-            </tr>
-          `;
+    <tr class="fila-planilla">
+      <td class="celda-planilla ps-4">
+        <span class="nombre-agente">${p.info.nombre}</span>
+        <span class="id-agente">ID: ${p.info.codigo}</span>
+      </td>
+      ${formatBadge(p.e1)}
+      ${formatBadge(p.s1)}
+      ${formatBadge(p.e2)}
+      ${formatBadge(p.s2)}
+    </tr>
+  `;
           });
 
           htmlAcumulado += `</tbody></table></div>`;
