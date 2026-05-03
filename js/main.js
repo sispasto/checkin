@@ -5,40 +5,6 @@ var versionApp = localStorage.getItem("asist_app_version") || ""; //La version s
 let swRegistration = null; // 🔥 referencia global
 let intervalSW = null;
 let newVersionAvailable = null;
-//Para Notificaciones push
-const DB_NAME = "AsistenciaDB";
-const STORE_NAME = "configuracion";
-
-/* =========================
-   GESTIÓN DE PUSH Y INDEXEDDB
-========================= */
-
-// Asegura que la DB y el Almacén existan
-function inicializarIndexedDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-    request.onsuccess = () => resolve();
-    request.onerror = (e) => reject(e);
-  });
-}
-
-// Guarda el UUID en IndexedDB (Solo lo llamas en la terminal del ADMIN)
-async function autorizarComoAdmin(uuid) {
-  await inicializarIndexedDB();
-  const db = await new Promise((res) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onsuccess = (e) => res(e.target.result);
-  });
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  tx.objectStore(STORE_NAME).put(uuid, "uuid_cliente");
-  console.log("Terminal autorizada localmente como Admin.");
-}
 
 /***************************************************/
 
