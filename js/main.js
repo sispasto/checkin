@@ -83,6 +83,14 @@ function registrarTerminal() {
   main.appendChild(registroTerminal);
 }
 
+function reportePromotores() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const reportePromotores = document.createElement("reporte-detalle-component");
+  reportePromotores.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(reportePromotores);
+}
+
 function generarToken() {
   let main = document.getElementById("App");
   removeALLChilds(main);
