@@ -1,0 +1,238 @@
+<style>
+  /* --- Estilos de la Interfaz --- */
+  .filtro-fecha {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+  .input-dark {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    color: white;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    padding: 5px;
+  }
+  .btn-filter {
+    background-color: #238636;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+  }
+
+  /* --- Estilos de la Matriz de Agentes (FALTABAN ESTOS) --- */
+  .registro-agente {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .agente-nombre {
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #58a6ff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .grid-marcaciones {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas iguales */
+    gap: 8px;
+  }
+  .bloque-turno {
+    background: #0d1117;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #21262d;
+    text-align: center;
+  }
+  .turno-label {
+    display: block;
+    font-size: 9px;
+    color: #8b949e;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .turno-hora {
+    font-family: "monospace";
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  /* --- Colores de Estado --- */
+  .text-ok {
+    color: #3fb950;
+  } /* Verde */
+  .text-warn {
+    color: #d29922;
+  } /* Naranja */
+  .text-falta {
+    color: #f85149;
+  } /* Rojo */
+</style>
+
+<div class="container mt-3 mb-5">
+  <div
+    class="card card-reporte text-white shadow-lg"
+    style="background: #0d1117"
+  >
+    <div
+      class="card-header bg-gradient-dark py-3 border-secondary d-flex justify-content-between align-items-center"
+    >
+      <h6 class="mb-0 text-info fw-bold">
+        <i class="bi bi-person-check-fill me-2"></i>CONTROL DE ASISTENCIA
+      </h6>
+    </div>
+
+    <div class="card-body p-3">
+      <div class="filtro-fecha">
+        <div class="row g-2 align-items-end">
+          <div class="col-10">
+            <label class="text-secondary small d-block mb-1"
+              >Seleccionar Fecha:</label
+            >
+            <input
+              type="date"
+              id="input-fecha"
+              class="form-control input-dark w-100"
+            />
+          </div>
+          <div class="col-2 text-end">
+            <button
+              onclick="nsReporteAsistencia.cargarMatriz()"
+              class="btn btn-filter w-100"
+            >
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="loader-reporte" class="text-center py-5 d-none">
+        <div class="spinner-border text-info" role="status"></div>
+        <p class="text-secondary small mt-2 font-monospace">SINCRONIZANDO...</p>
+      </div>
+
+      <div id="contenido-reporte" class="lista-asistencia"></div>
+    </div>
+
+    <div class="card-footer bg-black text-center py-3">
+      <button
+        onclick="window.location.hash = '#/'"
+        class="btn btn-outline-secondary btn-sm w-100"
+      >
+        <i class="bi bi-arrow-left me-2"></i>VOLVER AL PANEL
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.nsReporteAsistencia = (function () {
+    const _getDom = () => ({
+      contenedor: document.getElementById("contenido-reporte"),
+      loader: document.getElementById("loader-reporte"),
+      inputFecha: document.getElementById("input-fecha"),
+    });
+
+    async function cargarMatriz() {
+      const dom = _getDom();
+      if (!dom.contenedor || !dom.loader) return;
+
+      const fechaSeleccionada = dom.inputFecha.value;
+
+      dom.loader.classList.remove("d-none");
+      dom.contenedor.classList.add("d-none");
+      dom.contenedor.innerHTML = "";
+
+      try {
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_get_reporte_detalle`, // Asegúrate que el nombre sea correcto
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ fecha: fechaSeleccionada }),
+          },
+        );
+
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(result.error || "Error de comunicación");
+
+        if (!result.data || result.data.length === 0) {
+          dom.contenedor.innerHTML = `
+            <div class="text-center py-5 px-3">
+              <i class="bi bi-search text-secondary fs-1 mb-3 d-block"></i>
+              <h6 class="text-white-50">SIN REGISTROS</h6>
+              <p class="small text-muted font-monospace">No hay marcas para el ${fechaSeleccionada}</p>
+            </div>`;
+        } else {
+          let htmlAcumulado = "";
+          result.data.forEach((p) => {
+            const formatTurno = (label, data) => {
+              let color = "text-ok";
+              const estado = (data.estado || "").toUpperCase();
+
+              if (estado === "FALTA") color = "text-falta";
+              else if (estado === "TARDE") color = "text-warn";
+              else if (estado !== "A TIEMPO" && estado !== "AL DIA")
+                color = "text-secondary";
+
+              return `
+                <div class="bloque-turno">
+                  <span class="turno-label">${label}</span>
+                  <span class="turno-hora ${color}">${data.hora || "--:--"}</span>
+                </div>`;
+            };
+
+            htmlAcumulado += `
+              <div class="registro-agente">
+                <div class="agente-nombre">
+                  <span>${p.info.nombre}</span>
+                  <span class="text-secondary" style="font-size: 10px;">ID: ${p.info.codigo}</span>
+                </div>
+                <div class="grid-marcaciones">
+                  ${formatTurno("E1", p.e1)}
+                  ${formatTurno("S1", p.s1)}
+                  ${formatTurno("E2", p.e2)}
+                  ${formatTurno("S2", p.s2)}
+                </div>
+              </div>`;
+          });
+          dom.contenedor.innerHTML = htmlAcumulado;
+        }
+      } catch (err) {
+        console.error("Error en Matriz:", err);
+        dom.contenedor.innerHTML = `<div class="alert alert-danger m-3 small">ERROR: ${err.message}</div>`;
+      } finally {
+        dom.loader.classList.add("d-none");
+        dom.contenedor.classList.remove("d-none");
+      }
+    }
+
+    setTimeout(() => {
+      const dom = _getDom();
+      if (dom.inputFecha) {
+        const hoy = new Date().toLocaleDateString("en-CA", {
+          timeZone: "America/Bogota",
+        });
+        dom.inputFecha.value = hoy;
+      }
+      cargarMatriz();
+    }, 200);
+
+    return { cargarMatriz };
+  })();
+</script>
