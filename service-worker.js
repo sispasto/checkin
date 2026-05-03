@@ -1,41 +1,14 @@
-const APP_VERSION = "1.6";
-const CACHE_NAME = `app-cache-v${APP_VERSION}`;
-const DB_NAME = "AsistenciaDB";
-const STORE_NAME = "configuracion";
+const APP_VERSION = "1.7"; // Subimos versión por el cambio estructural
+const CACHE_NAME = `asist-app-cache-v${APP_VERSION}`;
 
-// --- LÓGICA DE NOTIFICACIONES Y INDEXEDDB ---
-
-async function esTerminalAdmin() {
-  return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onerror = () => resolve(false);
-    request.onsuccess = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        resolve(false);
-        return;
-      }
-      const transaction = db.transaction(STORE_NAME, "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const getUuid = store.get("uuid_cliente");
-
-      getUuid.onsuccess = () => resolve(!!getUuid.result);
-      getUuid.onerror = () => resolve(false);
-    };
-  });
-}
+// --- LÓGICA DE NOTIFICACIONES SIMPLIFICADA ---
 
 async function procesarNotificacionPush(event) {
-  // 1. Validar si es Admin antes de hacer nada
-  const isAdmin = await esTerminalAdmin();
+  let data = {
+    title: "SISTEMA DE ASISTENCIA",
+    body: "Nueva novedad registrada",
+  };
 
-  if (!isAdmin) {
-    console.log("Push recibido: Terminal no autorizada. Silenciando...");
-    return;
-  }
-
-  // 2. Extraer datos (Supabase enviará un JSON)
-  let data = { title: "Marcación", body: "Nueva asistencia registrada" };
   try {
     if (event.data) {
       data = event.data.json();
@@ -51,8 +24,7 @@ async function procesarNotificacionPush(event) {
     vibrate: [300, 150, 300, 150, 500],
     tag: "Asistencia-alerta",
     renotify: true,
-    requireInteraction: true, // 🔥 no se quita sola
-
+    requireInteraction: true, // Se mantiene hasta que el usuario la gestione
     data: {
       url: data.url || "/checkin/index.html",
     },
@@ -71,7 +43,7 @@ self.addEventListener("install", (e) => {
         "/checkin/index.html",
         "/checkin/css/home.css",
         "/checkin/js/main.js",
-        "/checkin/componentes/index.js", // Asegúrate de cachear la vista correcta
+        "/checkin/componentes/index.js",
       ]);
     }),
   );
@@ -91,7 +63,7 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-// ESCUCHA DE PUSH
+// ESCUCHA DE PUSH (Ya no valida admin, confía en el servidor)
 self.addEventListener("push", (event) => {
   event.waitUntil(procesarNotificacionPush(event));
 });
@@ -99,12 +71,26 @@ self.addEventListener("push", (event) => {
 // CLICK EN NOTIFICACIÓN
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data.url));
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        if (clientList.length > 0) {
+          let client = clientList[0];
+          for (let i = 0; i < clientList.length; i++) {
+            if (clientList[i].focused) {
+              client = clientList[i];
+            }
+          }
+          return client.focus();
+        }
+        return clients.openWindow(event.notification.data.url);
+      }),
+  );
 });
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       const fetchPromise = fetch(e.request)
@@ -116,16 +102,13 @@ self.addEventListener("fetch", (e) => {
           ) {
             return networkRes;
           }
-
           const responseClone = networkRes.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(e.request, responseClone);
           });
-
           return networkRes;
         })
         .catch(() => cachedResponse);
-
       return cachedResponse || fetchPromise;
     }),
   );
@@ -133,12 +116,8 @@ self.addEventListener("fetch", (e) => {
 
 self.addEventListener("message", (event) => {
   if (event.data === "GET_VERSION") {
-    event.source.postMessage({
-      type: "VERSION",
-      version: APP_VERSION,
-    });
+    event.source.postMessage({ type: "VERSION", version: APP_VERSION });
   }
-
   if (event.data?.action === "SKIP_WAITING") {
     self.skipWaiting();
   }
