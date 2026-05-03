@@ -1,113 +1,117 @@
 <style>
-  /* --- Fondo y Contenedor Principal --- */
+  /* --- Contenedor Principal --- */
   .card-reporte {
-    background: #ffffff !important;
-    border: 1px solid #e1e4e8 !important;
-    border-radius: 20px !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+    background: rgba(
+      255,
+      255,
+      255,
+      0.7
+    ) !important; /* Fondo claro traslúcido */
+    backdrop-filter: blur(15px) saturate(150%);
+    -webkit-backdrop-filter: blur(15px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
     overflow: hidden;
   }
 
+  /* --- Encabezado Azul Sólido --- */
   .card-header {
-    background: #ffffff !important;
-    padding: 20px !important;
+    background: #0047c7 !important; /* Azul intenso de la imagen */
+    padding: 20px 25px !important;
     border-bottom: none !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .text-info-custom {
-    color: #28a745 !important; /* Verde corporativo */
-    font-weight: 800;
+  .header-title {
+    color: #ffffff !important;
+    font-weight: 700;
     font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
-  /* --- Filtro de Fecha (Compacto y a la derecha) --- */
-  .filtro-fecha {
-    background-color: #f6f8fa;
-    border-radius: 12px;
-    padding: 10px 15px;
-    border: 1px solid #e1e4e8;
-  }
-
-  .input-fecha-clean {
-    border: none;
-    background: transparent;
-    font-weight: bold;
-    color: #28a745;
+  /* --- Filtro de Fecha (Integrado en Header) --- */
+  .input-fecha-glass {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+    border-radius: 10px;
+    padding: 5px 15px;
+    font-weight: 600;
   }
 
   /* --- Estructura de Tabla --- */
   .tabla-asistencia {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
+    border-collapse: collapse;
   }
 
-  .header-tabla {
-    background-color: #eafaf1; /* Verde muy clarito */
-    color: #28a745;
-    font-weight: 800;
+  .header-labels {
+    background: #0056ed !important; /* Un azul un poco más claro para los títulos */
+    color: #ffffff;
     text-transform: uppercase;
     font-size: 0.75rem;
-    letter-spacing: 1px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
   }
 
-  .header-tabla th {
-    padding: 12px;
+  .header-labels th {
+    padding: 12px 15px;
     border: none;
   }
 
   /* --- Filas de Agentes --- */
   .fila-agente {
-    background: #ffffff;
-    transition: all 0.2s;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background 0.3s;
   }
 
-  .fila-agente td {
-    padding: 15px 10px;
-    border-bottom: 1px solid #f1f3f5;
-    vertical-align: middle;
+  .fila-agente:hover {
+    background: rgba(255, 255, 255, 0.4);
   }
 
-  .nombre-agente-container {
-    display: flex;
-    flex-direction: column;
+  .agente-info {
+    padding: 15px 25px !important;
   }
 
-  .nombre-agente-text {
+  .nombre-txt {
+    color: #1e293b;
     font-weight: 700;
-    color: #24292e;
     font-size: 0.9rem;
+    display: block;
   }
 
-  .id-agente-text {
-    font-size: 0.7rem;
-    color: #6a737d;
+  .id-txt {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
   }
 
-  /* --- Bloques de Marcación (Cajas Blancas con borde) --- */
-  .caja-marca {
-    background: #ffffff;
-    border: 1px solid #e1e4e8;
-    border-radius: 10px;
-    padding: 8px;
-    min-width: 80px;
-    text-align: center;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  /* --- Cajas de Marcación --- */
+  .caja-vacia {
+    color: #ef4444; /* Rojo suave */
     font-weight: 700;
-    font-size: 0.85rem;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    background: rgba(239, 68, 68, 0.02);
   }
 
-  /* --- Colores de Marcación --- */
-  .hora-vacia {
-    color: #d73a49;
-  } /* Rojo para falta */
-  .hora-ok {
-    color: #28a745;
-  } /* Verde para a tiempo */
+  .caja-ok {
+    color: #10b981; /* Verde esmeralda */
+    font-weight: 700;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    background: rgba(16, 185, 129, 0.02);
+  }
 
-  .card-footer {
-    background: #ffffff !important;
-    border-top: 1px solid #f1f3f5 !important;
+  .caja-discreta {
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 85px;
+    text-align: center;
+    font-family: "Inter", sans-serif;
   }
 </style>
 
@@ -212,51 +216,46 @@
             </div>`;
         } else {
           // --- CONSTRUCCIÓN DE LA TABLA "SOFT-CLEAN" ---
+          // ... dentro del else de cargarMatriz ...
           let htmlAcumulado = `
             <div class="table-responsive">
               <table class="tabla-asistencia">
                 <thead>
-                  <tr class="header-tabla">
-                    <th class="text-start ps-4">NOMBRE COMPLETO</th>
-                    <th class="text-center">E1</th>
-                    <th class="text-center">S1</th>
-                    <th class="text-center">E2</th>
-                    <th class="text-center pe-4">S2</th>
+                  <tr class="header-labels text-center">
+                    <th class="text-start ps-5">NOMBRE COMPLETO</th>
+                    <th>E1</th>
+                    <th>S1</th>
+                    <th>E2</th>
+                    <th>S2</th>
                   </tr>
                 </thead>
                 <tbody>
           `;
 
           result.data.forEach((p) => {
-            // Función interna para crear las celdas de tiempo
-            const formatCell = (data) => {
-              let estadoClase = "hora-ok"; // Verde por defecto
-              const estado = (data.estado || "").toUpperCase();
-
-              if (estado === "FALTA" || data.hora === "--:--")
-                estadoClase = "hora-vacia";
-              else if (estado === "TARDE") estadoClase = "text-warn"; // Opcional por si quieres naranja
-
+            const renderMarca = (obj) => {
+              const esFalta =
+                obj.hora === "--:--" ||
+                (obj.estado || "").toUpperCase() === "FALTA";
+              const claseStatus = esFalta ? "caja-vacia" : "caja-ok";
               return `
-                <td class="text-center">
-                  <div class="caja-marca ${estadoClase}">
-                    ${data.hora || "--:--"}
-                  </div>
-                </td>`;
+              <td class="text-center">
+                <div class="caja-discreta ${claseStatus}">
+                  ${obj.hora || "--:--"}
+                </div>
+              </td>`;
             };
 
             htmlAcumulado += `
               <tr class="fila-agente">
-                <td class="ps-4">
-                  <div class="nombre-agente-container">
-                    <span class="nombre-agente-text">${p.info.nombre}</span>
-                    <span class="id-agente-text">ID: ${p.info.codigo}</span>
-                  </div>
+                <td class="agente-info">
+                  <span class="nombre-txt">${p.info.nombre}</span>
+                  <span class="id-txt">ID: ${p.info.codigo}</span>
                 </td>
-                ${formatCell(p.e1)}
-                ${formatCell(p.s1)}
-                ${formatCell(p.e2)}
-                ${formatCell(p.s2)}
+                ${renderMarca(p.e1)}
+                ${renderMarca(p.s1)}
+                ${renderMarca(p.e2)}
+                ${renderMarca(p.s2)}
               </tr>
             `;
           });
