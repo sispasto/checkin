@@ -69,22 +69,30 @@ self.addEventListener("push", (event) => {
 });
 
 // CLICK EN NOTIFICACIÓN
+// CLICK EN NOTIFICACIÓN - Versión Corregida
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+
+  // Obtenemos la URL que mandó la Edge Function
+  const urlDestino = event.notification.data?.url || "/checkin/index.html";
+
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
-        if (clientList.length > 0) {
-          let client = clientList[0];
-          for (let i = 0; i < clientList.length; i++) {
-            if (clientList[i].focused) {
-              client = clientList[i];
-            }
+        // Si la app ya está abierta en alguna pestaña
+        for (const client of clientList) {
+          // Verificamos si es nuestra App (ajusta el path si es necesario)
+          if (client.url.includes("/checkin/") && "navigate" in client) {
+            // ¡ESTA ES LA MAGIA! Forzamos a la pestaña abierta a ir al reporte
+            client.navigate(urlDestino);
+            return client.focus();
           }
-          return client.focus();
         }
-        return clients.openWindow(event.notification.data.url);
+        // Si la app no estaba abierta, la abre desde cero
+        if (clients.openWindow) {
+          return clients.openWindow(urlDestino);
+        }
       }),
   );
 });
