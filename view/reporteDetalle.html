@@ -1,180 +1,155 @@
 <style>
-  /* --- Estenedor Principal (Limpio y Corporativo) --- */
+  /* --- Contenedor Principal --- */
   .card-reporte {
     background: #ffffff !important;
     border: 1px solid #dee2e6 !important;
     border-radius: 8px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     overflow: hidden;
-    margin-bottom: 20px;
   }
 
-  /* --- Encabezado Principal (Negro Google/Chrome) --- */
+  /* --- Encabezado Superior (Negro) --- */
   .card-header {
-    background: #212529 !important; /* Negro sólido profesional */
+    background: #212529 !important;
     padding: 15px 25px !important;
-    border-bottom: none !important;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border: none !important;
   }
 
-  /* Texto CONTROL ASISTENCIA: Blanco y Negrita */
+  /* Texto CONTROL DE ASISTENCIA (Blanco y Negrita) */
   .header-title {
     color: #ffffff !important;
-    font-weight: 800 !important; /* Negrita extra */
+    font-weight: 800 !important;
     font-size: 1.1rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    margin: 0;
   }
 
-  /* --- Área de Filtros --- */
-  .filtro-container {
-    background: #f8f9fa;
-    padding: 15px 25px;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-  }
-
-  .label-filtro {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #495057;
-  }
-
-  .input-fecha-planilla {
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 0.9rem;
-    outline: none;
-  }
-
-  /* Botón de Búsqueda Negro Bootstrap */
+  /* --- Botón de Búsqueda (Negro Bootstrap) --- */
   .btn-search-dark {
     background-color: #212529 !important;
-    border: 1px solid #212529 !important;
+    border: 1px solid #454d55 !important;
     color: #ffffff !important;
     border-radius: 6px;
-    padding: 6px 18px;
+    padding: 6px 15px;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .btn-search-dark:hover {
     background-color: #000000 !important;
-    border-color: #000000 !important;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
   }
 
-  /* --- Tabla Estilo Planilla (Gris Carbón) --- */
+  /* --- Estructura de Tabla --- */
   .tabla-planilla {
     width: 100%;
     border-collapse: collapse;
+    background-color: #ffffff !important;
   }
 
+  /* Encabezados de columna (Gris Carbón) */
   .header-labels {
-    background: #343a40 !important; /* Gris oscuro de la imagen */
+    background: #343a40 !important;
     color: #ffffff !important;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
   }
 
   .header-labels th {
     padding: 12px 10px !important;
-    border: 1px solid #454d55 !important; /* Bordes visibles en header */
+    border: 1px solid #454d55 !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
     text-align: center;
   }
 
-  /* Filas de Datos */
+  /* --- Filas de Datos (CORRECCIÓN DE COLOR DE TEXTO) --- */
   .fila-planilla {
-    background: #ffffff;
     border-bottom: 1px solid #dee2e6;
   }
 
   .fila-planilla:nth-child(even) {
-    background: #f8f9fa; /* Efecto zebra */
+    background-color: #f8f9fa !important;
   }
 
   .fila-planilla:hover {
-    background: #f1f3f5;
+    background-color: #f1f3f5 !important;
   }
 
+  /* Celdas de la tabla */
   .celda-planilla {
-    padding: 10px 15px !important;
+    padding: 12px 15px !important;
     border-right: 1px solid #dee2e6;
     vertical-align: middle;
+    /* Aseguramos que el texto sea siempre visible */
+    color: #212529 !important;
   }
 
+  /* Nombre del Agente (Negrita y Negro) */
   .nombre-agente {
-    color: #212529;
+    color: #212529 !important;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     display: block;
   }
 
+  /* ID del Agente (Gris oscuro legible) */
   .id-agente {
-    color: #6c757d;
+    color: #495057 !important;
     font-size: 0.75rem;
     font-weight: 600;
+    display: block;
   }
 
   /* --- Badges de Marcación (Estilo CRÉDITO) --- */
   .badge-planilla {
     display: inline-block;
-    padding: 5px 12px;
+    padding: 6px 12px;
     border-radius: 4px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 800;
-    min-width: 75px;
+    min-width: 80px;
     text-align: center;
+    font-family: "Roboto Mono", monospace;
   }
 
-  /* Colores de estado */
   .status-ok {
-    background: #d1e7dd;
-    color: #0f5132;
+    background-color: #d1e7dd !important;
+    color: #0f5132 !important;
+    border: 1px solid #badbcc;
   }
+
   .status-tarde {
-    background: #ffc107; /* Amarillo exacto de la imagen */
-    color: #000000;
+    background-color: #ffc107 !important;
+    color: #000000 !important;
+    border: 1px solid #edb100;
   }
+
   .status-falta {
-    background: #f8d7da;
-    color: #842029;
+    background-color: #f8d7da !important;
+    color: #842029 !important;
+    border: 1px solid #f5c2c7;
   }
 
   /* --- Footer / Botón Volver --- */
   .card-footer {
     background: #212529 !important;
     padding: 10px !important;
-    border-top: none !important;
+    border: none !important;
   }
 
   .btn-volver-dark {
     background: transparent !important;
     color: #ffffff !important;
-    border: 1px solid #444 !important;
+    border: 1px solid #454d55 !important;
     width: 100%;
     padding: 8px;
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
-    transition: background 0.3s;
-  }
-
-  .btn-volver-dark:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
   }
 </style>
 
