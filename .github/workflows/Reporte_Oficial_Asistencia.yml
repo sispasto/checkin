@@ -1,0 +1,30 @@
+name: Reporte_Asistencia_Automatico
+
+on:
+  schedule:
+    # Horarios ajustados para Colombia (UTC-5)
+    - cron: '45 14 * * *' # 09:45 AM COL (e1)
+    - cron: '45 17 * * *' # 12:45 PM COL (s1)
+    - cron: '15 19 * * *' # 02:15 PM COL (e2)
+    - cron: '15 0 * * *'  # 07:15 PM COL (s2)
+  workflow_dispatch:      # Lo dejamos para que siempre puedas probar manualmente
+
+jobs:
+  reporte-asistencia:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determinar Turno y Llamar Function
+        run: |
+          # Extraemos la hora actual en formato 24h
+          HORA=$(date +%H)
+          
+          # Lógica para decidir qué turno enviar según la hora de ejecución
+          if [ "$HORA" == "14" ]; then TURNO="e1";
+          elif [ "$HORA" == "17" ]; then TURNO="s1";
+          elif [ "$HORA" == "19" ]; then TURNO="e2";
+          else TURNO="s2";
+          fi
+          
+          echo "Disparando reporte para el turno: $TURNO"
+          
+          curl -i -X GET "https://pmbxyfketmuzocepllvf.supabase.co/functions/v1/asist_reporte_resumen?turno=$TURNO"
