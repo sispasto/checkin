@@ -6,3 +6,4 @@ import "./registrarTerminal.js";
 import "./menuTemplates.js";
 import "./marcarAsistencia.js";
 import "./reporteComponent.js";
+import "./modificarHorarios.js";
