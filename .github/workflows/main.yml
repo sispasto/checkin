@@ -1,0 +1,18 @@
+name: Test_Minuto_Supabase
+
+on:
+  schedule:
+    # Se ejecuta cada minuto
+    - cron: '* * * * *'
+  workflow_dispatch: # Botón para probar manualmente
+
+jobs:
+  test-call:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamada de prueba
+        run: |
+          curl -i -X POST https://pmbxyfketmuzocpllvf.supabase.co/functions/v1/asist_reporte_resumen \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          -d '{"turno": "e1"}'
