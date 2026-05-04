@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Llamada de prueba
         run: |
-          curl -i -X POST https://pmbxyfketmuzocpllvf.supabase.co/functions/v1/asist_reporte_resumen \
+          curl -i -X POST "https://pmbxyfketmuzocpllvf.supabase.co/functions/v1/asist_reporte_resumen" \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
           -d '{"turno": "e1"}'
