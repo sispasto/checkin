@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Llamada a la Edge Function
         run: |
-          curl -i -X GET "https://pmbxyfketmuzocpllvf.supabase.co/functions/v1/asist_reporte_resumen?turno=e1"
+          curl -i -X GET "https://pmbxyfketmuzocepllvf.supabase.co/functions/v1/asist_reporte_resumen"
