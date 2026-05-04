@@ -49,9 +49,9 @@
               <select
                 id="selectPromotor"
                 class="form-select promotor-select"
-                onchange="nsModificarHorarios.cargarHorario(this.value)"
+                onchange="nsModificarHorarios.seleccionarDelCache(this.value)"
               >
-                <option value="">Cargando promotores...</option>
+                <option value="">Cargando lista de personal...</option>
               </select>
             </div>
           </div>
@@ -137,69 +137,78 @@
 
 <script>
   var nsModificarHorarios = (function () {
-    const supabase = window.supabase; // Asumiendo que ya está inicializado globalmente
+    let listaPromotoresCache = []; // Objeto global local
 
     async function init() {
       const select = document.getElementById("selectPromotor");
       try {
-        // 1. Obtener promotores (valor 1 según tu descripción)
-        const { data, error } = await supabase
-          .from("asist_personas")
-          .select("codigo, nombre_completo")
-          .eq("relacion_empresa", 1)
-          .order("nombre_completo", { ascending: true });
+        // 1. Obtener specs de hardware y ID para seguridad
+        const hardware = await obtenerUUIDHardwareGlobal();
+        const deviceId = localStorage.getItem("device_token_id");
 
-        if (error) throw error;
+        // 2. Llamar a la Edge Function (Método POST por seguridad de Hardware)
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_getPromotoresHorarios`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+              apikey: window.SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              device_id: deviceId,
+              hardware_specs: hardware.specs,
+            }),
+          },
+        );
 
+        const result = await response.json();
+        if (result.status === "error") throw new Error(result.error);
+
+        // 3. Guardar en Cache Local
+        listaPromotoresCache = result.data;
+
+        // 4. Llenar Select
         select.innerHTML =
           '<option value="">-- Seleccione un Promotor --</option>';
-        data.forEach((p) => {
+        listaPromotoresCache.forEach((p) => {
           const opt = document.createElement("option");
           opt.value = p.codigo;
-          opt.textContent = `${p.nombre_completo} (${p.codigo})`;
+          opt.textContent = `${p.nombre} (${p.codigo})`;
           select.appendChild(opt);
         });
       } catch (e) {
-        console.error("Error cargando promotores:", e);
-        alertSMS("Error al cargar lista de promotores");
+        console.error("Error init:", e);
+        select.innerHTML = '<option value="">Error de acceso</option>';
+        alertSMS("Acceso Denegado: " + e.message);
       }
     }
 
-    async function cargarHorario(codigo) {
+    // NUEVA FUNCIÓN: No consulta la BD, usa el objeto local
+    function seleccionarDelCache(codigo) {
+      const form = document.getElementById("formHorarios");
+      const btn = document.getElementById("btnGrabarHorario");
+
       if (!codigo) {
-        document.getElementById("formHorarios").reset();
-        document.getElementById("btnGrabarHorario").disabled = true;
+        form.reset();
+        btn.disabled = true;
         return;
       }
 
-      try {
-        // En tu tabla de la imagen c4ef1e el campo es 'usuario'
-        const { data, error } = await supabase
-          .from("asist_horarios") // Cambia al nombre real de tu tabla de horarios
-          .select("*")
-          .eq("usuario", codigo)
-          .maybeSingle();
+      const pro = listaPromotoresCache.find((item) => item.codigo === codigo);
 
-        if (error) throw error;
+      if (pro) {
+        document.getElementById("h_usuario_codigo").value = pro.codigo;
+        document.getElementById("entrada1").value = pro.entrada1 || "";
+        document.getElementById("salida1").value = pro.salida1 || "";
+        document.getElementById("entrada2").value = pro.entrada2 || "";
+        document.getElementById("salida2").value = pro.salida2 || "";
+        btn.disabled = false;
 
-        document.getElementById("h_usuario_codigo").value = codigo;
-        document.getElementById("btnGrabarHorario").disabled = false;
-
-        if (data) {
-          // Llenamos los inputs con los valores actuales
-          document.getElementById("entrada1").value = data.entrada1 || "";
-          document.getElementById("salida1").value = data.salida1 || "";
-          document.getElementById("entrada2").value = data.entrada2 || "";
-          document.getElementById("salida2").value = data.salida2 || "";
-        } else {
-          document.getElementById("formHorarios").reset();
-          document.getElementById("h_usuario_codigo").value = codigo;
-          alertSMS(
-            "Este promotor no tiene horario. Se creará uno nuevo al grabar.",
-          );
+        if (!pro.entrada1) {
+          console.log("Aviso: Promotor sin horario previo.");
         }
-      } catch (e) {
-        alertSMS("Error al consultar horario actual");
       }
     }
 
@@ -218,17 +227,27 @@
 
       btn.disabled = true;
       btn.innerHTML =
-        '<span class="spinner-border spinner-border-sm"></span> PROCESANDO...';
+        '<span class="spinner-border spinner-border-sm"></span> GUARDANDO...';
 
       try {
-        // Usamos UPSERT: Si existe el código lo actualiza, si no lo crea
-        const { error } = await supabase
+        const { error } = await window.supabase
           .from("asist_horarios")
           .upsert(payload, { onConflict: "usuario" });
 
         if (error) throw error;
 
-        alertSMS("Horarios actualizados correctamente ✅");
+        // ACTUALIZAR EL CACHE LOCAL para que no necesite refrescar la página
+        const index = listaPromotoresCache.findIndex(
+          (p) => p.codigo === codigo,
+        );
+        if (index !== -1) {
+          listaPromotoresCache[index].entrada1 = payload.entrada1;
+          listaPromotoresCache[index].salida1 = payload.salida1;
+          listaPromotoresCache[index].entrada2 = payload.entrada2;
+          listaPromotoresCache[index].salida2 = payload.salida2;
+        }
+
+        alertSMS("Horario actualizado en sistema y cache local ✅");
       } catch (e) {
         alertSMS("Error al guardar: " + e.message);
       } finally {
@@ -238,9 +257,8 @@
       }
     }
 
-    // Inicializar al cargar el script
     setTimeout(init, 100);
 
-    return { cargarHorario, grabarHorario };
+    return { seleccionarDelCache, grabarHorario };
   })();
 </script>
