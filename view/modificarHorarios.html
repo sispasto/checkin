@@ -1,0 +1,246 @@
+<style>
+  .horario-input {
+    background: #f8f9fa !important;
+    border: 2px solid #e1e4e8 !important;
+    border-radius: 10px !important;
+    font-family: "Fira Code", monospace;
+    text-align: center;
+    font-weight: 600;
+  }
+  .horario-input:focus {
+    border-color: #0d6efd !important;
+    box-shadow: none !important;
+  }
+  .promotor-select {
+    border-radius: 12px !important;
+    padding: 12px !important;
+    border: 2px solid #0d6efd !important;
+    font-weight: 600;
+  }
+</style>
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+      <div class="card pro-card border-0">
+        <div class="card-header pro-header text-white border-0">
+          <div class="d-flex align-items-center">
+            <div
+              class="bg-success rounded-circle p-2 me-3"
+              style="--bs-bg-opacity: 0.2"
+            >
+              <i class="bi bi-clock-history text-success fs-4"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold">Gestión de Horarios</h5>
+              <small class="text-white-50"
+                >Configuración de jornadas por promotor</small
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <div class="row mb-4">
+            <div class="col-12">
+              <label class="form-label fw-bold small text-muted text-uppercase"
+                >Seleccionar Promotor</label
+              >
+              <select
+                id="selectPromotor"
+                class="form-select promotor-select"
+                onchange="nsModificarHorarios.cargarHorario(this.value)"
+              >
+                <option value="">Cargando promotores...</option>
+              </select>
+            </div>
+          </div>
+
+          <form
+            id="formHorarios"
+            onsubmit="nsModificarHorarios.grabarHorario(event)"
+          >
+            <input type="hidden" id="h_usuario_codigo" />
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="p-3 border rounded-3 bg-light">
+                  <h6 class="fw-bold mb-3 text-primary">
+                    <i class="bi bi-1-circle me-2"></i>Primer Turno
+                  </h6>
+                  <div class="row">
+                    <div class="col-6">
+                      <label class="small fw-bold">Entrada 1</label>
+                      <input
+                        type="time"
+                        id="entrada1"
+                        class="form-control horario-input"
+                        required
+                      />
+                    </div>
+                    <div class="col-6">
+                      <label class="small fw-bold">Salida 1</label>
+                      <input
+                        type="time"
+                        id="salida1"
+                        class="form-control horario-input"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="p-3 border rounded-3 bg-light">
+                  <h6 class="fw-bold mb-3 text-primary">
+                    <i class="bi bi-2-circle me-2"></i>Segundo Turno
+                  </h6>
+                  <div class="row">
+                    <div class="col-6">
+                      <label class="small fw-bold">Entrada 2</label>
+                      <input
+                        type="time"
+                        id="entrada2"
+                        class="form-control horario-input"
+                      />
+                    </div>
+                    <div class="col-6">
+                      <label class="small fw-bold">Salida 2</label>
+                      <input
+                        type="time"
+                        id="salida2"
+                        class="form-control horario-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 d-grid">
+              <button
+                type="submit"
+                class="btn btn-dark btn-pro"
+                id="btnGrabarHorario"
+                disabled
+              >
+                <i class="bi bi-cloud-arrow-up me-2"></i>ACTUALIZAR HORARIOS
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var nsModificarHorarios = (function () {
+    const supabase = window.supabase; // Asumiendo que ya está inicializado globalmente
+
+    async function init() {
+      const select = document.getElementById("selectPromotor");
+      try {
+        // 1. Obtener promotores (valor 1 según tu descripción)
+        const { data, error } = await supabase
+          .from("asist_personas")
+          .select("codigo, nombre_completo")
+          .eq("relacion_empresa", 1)
+          .order("nombre_completo", { ascending: true });
+
+        if (error) throw error;
+
+        select.innerHTML =
+          '<option value="">-- Seleccione un Promotor --</option>';
+        data.forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p.codigo;
+          opt.textContent = `${p.nombre_completo} (${p.codigo})`;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.error("Error cargando promotores:", e);
+        alertSMS("Error al cargar lista de promotores");
+      }
+    }
+
+    async function cargarHorario(codigo) {
+      if (!codigo) {
+        document.getElementById("formHorarios").reset();
+        document.getElementById("btnGrabarHorario").disabled = true;
+        return;
+      }
+
+      try {
+        // En tu tabla de la imagen c4ef1e el campo es 'usuario'
+        const { data, error } = await supabase
+          .from("asist_horarios") // Cambia al nombre real de tu tabla de horarios
+          .select("*")
+          .eq("usuario", codigo)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        document.getElementById("h_usuario_codigo").value = codigo;
+        document.getElementById("btnGrabarHorario").disabled = false;
+
+        if (data) {
+          // Llenamos los inputs con los valores actuales
+          document.getElementById("entrada1").value = data.entrada1 || "";
+          document.getElementById("salida1").value = data.salida1 || "";
+          document.getElementById("entrada2").value = data.entrada2 || "";
+          document.getElementById("salida2").value = data.salida2 || "";
+        } else {
+          document.getElementById("formHorarios").reset();
+          document.getElementById("h_usuario_codigo").value = codigo;
+          alertSMS(
+            "Este promotor no tiene horario. Se creará uno nuevo al grabar.",
+          );
+        }
+      } catch (e) {
+        alertSMS("Error al consultar horario actual");
+      }
+    }
+
+    async function grabarHorario(event) {
+      event.preventDefault();
+      const btn = document.getElementById("btnGrabarHorario");
+      const codigo = document.getElementById("h_usuario_codigo").value;
+
+      const payload = {
+        usuario: codigo,
+        entrada1: document.getElementById("entrada1").value,
+        salida1: document.getElementById("salida1").value,
+        entrada2: document.getElementById("entrada2").value,
+        salida2: document.getElementById("salida2").value,
+      };
+
+      btn.disabled = true;
+      btn.innerHTML =
+        '<span class="spinner-border spinner-border-sm"></span> PROCESANDO...';
+
+      try {
+        // Usamos UPSERT: Si existe el código lo actualiza, si no lo crea
+        const { error } = await supabase
+          .from("asist_horarios")
+          .upsert(payload, { onConflict: "usuario" });
+
+        if (error) throw error;
+
+        alertSMS("Horarios actualizados correctamente ✅");
+      } catch (e) {
+        alertSMS("Error al guardar: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML =
+          '<i class="bi bi-cloud-arrow-up me-2"></i>ACTUALIZAR HORARIOS';
+      }
+    }
+
+    // Inicializar al cargar el script
+    setTimeout(init, 100);
+
+    return { cargarHorario, grabarHorario };
+  })();
+</script>
