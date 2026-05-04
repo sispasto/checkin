@@ -1,4 +1,16 @@
 <style>
+  /* Fix para el título: Forzamos un fondo oscuro si .pro-header no existe */
+  .pro-card {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border-radius: 16px !important;
+    overflow: hidden;
+  }
+
+  .pro-header {
+    background: linear-gradient(135deg, #1a1c1e 0%, #2d3436 100%) !important;
+    padding: 1.5rem !important;
+  }
+
   .horario-input {
     background: #f8f9fa !important;
     border: 2px solid #e1e4e8 !important;
@@ -6,16 +18,38 @@
     font-family: "Fira Code", monospace;
     text-align: center;
     font-weight: 600;
+    transition: all 0.2s;
   }
+
   .horario-input:focus {
     border-color: #0d6efd !important;
-    box-shadow: none !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1) !important;
   }
+
   .promotor-select {
     border-radius: 12px !important;
     padding: 12px !important;
-    border: 2px solid #0d6efd !important;
+    border: 2px solid #e1e4e8 !important;
     font-weight: 600;
+    cursor: pointer;
+  }
+
+  .promotor-select:focus {
+    border-color: #0d6efd !important;
+    box-shadow: none !important;
+  }
+
+  .btn-pro {
+    border-radius: 12px !important;
+    padding: 14px !important;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s;
+  }
+
+  .btn-pro:active {
+    transform: scale(0.98);
   }
 </style>
 
@@ -32,7 +66,7 @@
               <i class="bi bi-clock-history text-success fs-4"></i>
             </div>
             <div>
-              <h5 class="mb-0 fw-bold">Gestión de Horarios</h5>
+              <h5 class="mb-0 fw-bold text-white">Gestión de Horarios</h5>
               <small class="text-white-50"
                 >Configuración de jornadas por promotor</small
               >
@@ -64,13 +98,15 @@
 
             <div class="row g-3">
               <div class="col-md-6">
-                <div class="p-3 border rounded-3 bg-light">
+                <div class="p-3 border rounded-3 bg-light shadow-sm">
                   <h6 class="fw-bold mb-3 text-primary">
-                    <i class="bi bi-1-circle me-2"></i>Primer Turno
+                    <i class="bi bi-1-circle-fill me-2"></i>Primer Turno
                   </h6>
                   <div class="row">
                     <div class="col-6">
-                      <label class="small fw-bold">Entrada 1</label>
+                      <label class="small fw-bold text-muted mb-1"
+                        >Entrada 1</label
+                      >
                       <input
                         type="time"
                         id="entrada1"
@@ -79,7 +115,9 @@
                       />
                     </div>
                     <div class="col-6">
-                      <label class="small fw-bold">Salida 1</label>
+                      <label class="small fw-bold text-muted mb-1"
+                        >Salida 1</label
+                      >
                       <input
                         type="time"
                         id="salida1"
@@ -92,13 +130,15 @@
               </div>
 
               <div class="col-md-6">
-                <div class="p-3 border rounded-3 bg-light">
+                <div class="p-3 border rounded-3 bg-light shadow-sm">
                   <h6 class="fw-bold mb-3 text-primary">
-                    <i class="bi bi-2-circle me-2"></i>Segundo Turno
+                    <i class="bi bi-2-circle-fill me-2"></i>Segundo Turno
                   </h6>
                   <div class="row">
                     <div class="col-6">
-                      <label class="small fw-bold">Entrada 2</label>
+                      <label class="small fw-bold text-muted mb-1"
+                        >Entrada 2</label
+                      >
                       <input
                         type="time"
                         id="entrada2"
@@ -106,7 +146,9 @@
                       />
                     </div>
                     <div class="col-6">
-                      <label class="small fw-bold">Salida 2</label>
+                      <label class="small fw-bold text-muted mb-1"
+                        >Salida 2</label
+                      >
                       <input
                         type="time"
                         id="salida2"
@@ -121,7 +163,7 @@
             <div class="mt-4 d-grid">
               <button
                 type="submit"
-                class="btn btn-dark btn-pro"
+                class="btn btn-dark btn-pro shadow"
                 id="btnGrabarHorario"
                 disabled
               >
