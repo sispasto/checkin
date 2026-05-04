@@ -91,6 +91,16 @@ function reportePromotores() {
   main.appendChild(reportePromotores);
 }
 
+function modificarHorarios() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const frmModificarHorarios = document.createElement(
+    "modificar-horarios-component",
+  );
+  frmModificarHorarios.setAttribute("container", "#App"); // <-- aquí pasas el parámetro
+  main.appendChild(frmModificarHorarios);
+}
+
 function generarToken() {
   let main = document.getElementById("App");
   removeALLChilds(main);
