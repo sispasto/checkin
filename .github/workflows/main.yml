@@ -3,13 +3,12 @@ name: Test_Minuto_Supabase
 on:
   schedule:
     - cron: '* * * * *'
-  workflow_dispatch: 
+  workflow_dispatch: # Esto activa el botón "Run workflow" para probar ya mismo
 
 jobs:
   test-call:
     runs-on: ubuntu-latest
     steps:
-      - name: Llamada de prueba
+      - name: Llamada a la Edge Function
         run: |
-          curl -i -X GET "https://pmbxyfketmuzocpllvf.supabase.co/functions/v1/asist_reporte_resumen?turno=e1" \
-          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+          curl -i -X GET "https://pmbxyfketmuzocpllvf.supabase.co/functions/v1/asist_reporte_resumen?turno=e1"
