@@ -11,7 +11,5 @@ jobs:
     steps:
       - name: Llamada de prueba
         run: |
-          curl -i -X POST 'https://pmbxyfketmuzocepllvf.supabase.co/functions/v1/asist_reporte_resumen' \
-          -H 'Content-Type: application/json' \
-          -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
-          -d '{"turno": "e1"}'
+          curl -i -X GET "https://pmbxyfketmuzocpllvf.supabase.co/functions/v1/asist_reporte_resumen?turno=e1" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
