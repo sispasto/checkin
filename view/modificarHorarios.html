@@ -257,8 +257,13 @@
     async function grabarHorario(event) {
       event.preventDefault();
       const btn = document.getElementById("btnGrabarHorario");
+      const select = document.getElementById("selectPromotor");
       const codigo = document.getElementById("h_usuario_codigo").value;
 
+      // Obtenemos el nombre para que la función pueda usarlo en el cuerpo del correo
+      const nombrePromotor = select.options[select.selectedIndex].text;
+
+      // 1. Preparamos el objeto con los datos de la tabla
       const payload = {
         usuario: codigo,
         entrada1: document.getElementById("entrada1").value,
@@ -269,16 +274,29 @@
 
       btn.disabled = true;
       btn.innerHTML =
-        '<span class="spinner-border spinner-border-sm"></span> GUARDANDO...';
+        '<span class="spinner-border spinner-border-sm"></span> ACTUALIZANDO...';
 
       try {
-        const { error } = await window.supabase
-          .from("asist_horarios")
-          .upsert(payload, { onConflict: "usuario" });
+        // 2. Llamada única a la Edge Function
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_updateHorarios`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+              apikey: window.SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify(payload),
+          },
+        );
 
-        if (error) throw error;
+        const result = await response.json();
 
-        // ACTUALIZAR EL CACHE LOCAL para que no necesite refrescar la página
+        if (result.status === "error") throw new Error(result.error);
+
+        // 3. Actualizar el Cache Local
+        // Esto evita tener que recargar la página para ver los cambios reflejados
         const index = listaPromotoresCache.findIndex(
           (p) => p.codigo === codigo,
         );
@@ -289,9 +307,10 @@
           listaPromotoresCache[index].salida2 = payload.salida2;
         }
 
-        alertSMS("Horario actualizado en sistema y cache local ✅");
+        alertSMS("Horario actualizado y notificado con éxito ✅");
       } catch (e) {
-        alertSMS("Error al guardar: " + e.message);
+        console.error("Error en update:", e);
+        alertSMS("Error al actualizar: " + e.message);
       } finally {
         btn.disabled = false;
         btn.innerHTML =
