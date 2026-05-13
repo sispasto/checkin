@@ -341,13 +341,13 @@
 
         // --- VALIDACIÓN DE UBICACIÓN ---
         // Verificamos si loc existe y si contiene las propiedades necesarias
-        if (!loc || !loc.latitud || !loc.longitud) {
+        /*if (!loc || !loc.latitud || !loc.longitud) {
           document.getElementById("ticket-asistencia").style.display = "none";
           alertSMS(
             "❌ Error: No se pudo obtener la ubicación. Asegúrate de tener el GPS encendido.",
           );
           return; // Detiene la ejecución de la función aquí
-        }
+        }*/
 
         const caracteristicas = resultado.specs;
         const coordenadas = loc;
