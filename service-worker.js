@@ -1,4 +1,4 @@
-const APP_VERSION = "3.0"; // Subimos versión por el cambio estructural
+const APP_VERSION = "1.1"; // Subimos versión por el cambio estructural
 const CACHE_NAME = `asist-app-cache-v${APP_VERSION}`;
 
 // --- LÓGICA DE NOTIFICACIONES SIMPLIFICADA ---
