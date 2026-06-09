@@ -53,7 +53,8 @@
         </div>
         <h4 class="text-warning">Acceso Restringido</h4>
         <p class="text-secondary small">
-          Este dispositivo no se encuentra vinculado físicamente a su cuenta.
+          Este dispositivo no se encuentra vinculado criptográficamente a su
+          cuenta.
         </p>
       </div>
 
@@ -62,7 +63,8 @@
           class="badge rounded-pill bg-success px-3 py-2 mb-3"
           style="font-size: 10px"
         >
-          <i class="bi bi-check-circle-fill me-1"></i> HARDWARE VERIFICADO
+          <i class="bi bi-check-circle-fill me-1"></i> FIRMA ASIMÉTRICA
+          VERIFICADA
         </span>
         <br />
 
@@ -113,22 +115,64 @@
     let timerInterval = null;
     let maxTime = 30;
 
+    const DB_NAME = "ServerPdsCryptoDB";
+    const STORE_NAME = "config_keys";
+
+    // Conectamos de forma limpia a IndexedDB para extraer la llave privada resguardada
+    function obtenerLlavePrivadaDesdeDB(uuidServer) {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onsuccess = (e) => {
+          const db = e.target.result;
+          const transaction = db.transaction(STORE_NAME, "readonly");
+          const store = transaction.objectStore(STORE_NAME);
+          const getReq = store.get(uuidServer);
+          getReq.onsuccess = () =>
+            resolve(getReq.result ? getReq.result.key : null);
+          getReq.onerror = () => reject(getReq.error);
+        };
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
     async function obtenerNuevoToken() {
       const qrImg = document.getElementById("qr-image");
       const panelAutorizado = document.getElementById("panel-autorizado");
       const panelBloqueado = document.getElementById("panel-bloqueado");
 
-      // Detener si el elemento ya no está en el DOM (Cambio de sección)
       if (!qrImg) {
         detenerTimer();
         return;
       }
 
       try {
-        // 1. Recuperamos los "ingredientes" crudos y el ID de identidad
-        const { specs } = await obtenerUUIDHardwareGlobal();
         const deviceId = localStorage.getItem("device_token_id");
 
+        // 1. Extraemos la llave privada vinculada a este uuid_server específico
+        const llavePrivada = await obtenerLlavePrivadaDesdeDB(deviceId);
+
+        if (!llavePrivada) {
+          throw new Error(
+            "No se encontró la firma privada de este hardware localmente.",
+          );
+        }
+
+        // 2. CREACIÓN DEL RETO CRIPTOGRÁFICO EN TIEMPO REAL
+        const timestamp = Date.now().toString();
+        const encoder = new TextEncoder();
+        const datosAFirmar = encoder.encode(timestamp);
+
+        // Firmamos matemáticamente el timestamp usando ECDSA P-256
+        const firmaBuffer = await window.crypto.subtle.sign(
+          { name: "ECDSA", hash: { name: "SHA-256" } },
+          llavePrivada,
+          datosAFirmar,
+        );
+        const firmaBase64 = btoa(
+          String.fromCharCode(...new Uint8Array(firmaBuffer)),
+        );
+
+        // 3. ENVÍO DE PAYLOAD CRIPTOGRÁFICO LIGERO A LA EDGE FUNCTION
         const response = await fetch(
           `${window.SUPABASE_URL}/functions/v1/asist_getToken`,
           {
@@ -139,15 +183,15 @@
               Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
             },
             body: JSON.stringify({
-              device_id: deviceId, // Quién dice ser
-              hardware_specs: specs, // Prueba física de quién es
+              device_id: deviceId,
+              challenge: timestamp,
+              firma: firmaBase64,
             }),
           },
         );
 
         const result = await response.json();
 
-        // 2. Si el servidor dice que no coinciden los specs o no está registrado
         if (!response.ok) {
           detenerTimer();
           panelAutorizado?.classList.add("d-none");
@@ -155,22 +199,28 @@
           return;
         }
 
-        // 3. Éxito: Generar QR
+        // 4. Éxito: Renderizar QR con el Token Dinámico
         if (result.token) {
           panelBloqueado?.classList.add("d-none");
           panelAutorizado?.classList.remove("d-none");
 
           qrImg.style.opacity = "0.3";
-          // Usamos una URL más limpia para el QR
           qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(result.token)}`;
 
           qrImg.onload = () => (qrImg.style.opacity = "1");
 
-          maxTime = result.expires_in || 40;
+          maxTime = result.expires_in || 30;
           reiniciarContador(maxTime);
         }
       } catch (err) {
-        console.error("Error de conexión:", err); // Reintento exponencial simple
+        console.error(
+          "Fallo en la negociación del token asimétrico:",
+          err.message,
+        );
+        detenerTimer();
+        panelAutorizado?.classList.add("d-none");
+        panelBloqueado?.classList.remove("d-none");
+        // Reintento automático preventivo a los 5 segundos
         setTimeout(obtenerNuevoToken, 5000);
       }
     }
@@ -185,7 +235,7 @@
         actualizarInterfaz(timeLeft);
 
         if (timeLeft <= 0) {
-          obtenerNuevoToken(); // Auto-renovar
+          obtenerNuevoToken();
         }
       }, 1000);
     }
@@ -205,7 +255,6 @@
       if (bar) {
         const porcentaje = (segundos / maxTime) * 100;
         bar.style.width = `${porcentaje}%`;
-        // Cambio de color visual crítico
         bar.style.backgroundColor = segundos <= 5 ? "#ff5f56" : "#17a2b8";
       }
     }
@@ -220,7 +269,6 @@
         return;
       }
 
-      // --- LÓGICA PARA MOSTRAR LA OFICINA ---
       const pdsCodigo = localStorage.getItem("pds_codigo") || "---";
       const pdsNombre = localStorage.getItem("pds_nombre") || "Sin Nombre";
       const contenedorOficina = document.getElementById("info-oficina");
@@ -231,13 +279,12 @@
             OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
         `;
       }
-      // --------------------------------------
 
       await obtenerNuevoToken();
     }
 
-    // Auto-ejecución
-    inicializarValidacion();
+    // Auto-ejecución ordenada
+    setTimeout(inicializarValidacion, 100);
 
     return {
       revalidar: inicializarValidacion,
