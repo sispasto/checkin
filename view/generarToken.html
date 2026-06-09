@@ -89,7 +89,7 @@
           <div id="token-bar" class="progress-token-bar"></div>
         </div>
         <div class="text-info small fw-bold mb-3">
-          Expira en: <span id="token-timer" class="text-white">20</span>s
+          Expira en: <span id="token-timer" class="text-white">30</span>s
         </div>
 
         <p class="text-info small fw-bold mt-2 mb-0 text-uppercase">
@@ -118,20 +118,20 @@
     const DB_NAME = "ServerPdsCryptoDB";
     const STORE_NAME = "config_keys";
 
-    // Conectamos de forma limpia a IndexedDB para extraer la llave privada resguardada
-    function obtenerLlavePrivadaDesdeDB(uuidServer) {
+    // Busca la CryptoKey usando el pds_codigo (Key Path real de tu IndexedDB)
+    function obtenerLlavePrivadaDesdeDB(pdsCodigo) {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, 1);
         request.onsuccess = (e) => {
           const db = e.target.result;
-          // Validamos si el store existe antes de abrir la transacción
           if (!db.objectStoreNames.contains(STORE_NAME)) {
             resolve(null);
             return;
           }
           const transaction = db.transaction(STORE_NAME, "readonly");
           const store = transaction.objectStore(STORE_NAME);
-          const getReq = store.get(uuidServer);
+
+          const getReq = store.get(pdsCodigo);
           getReq.onsuccess = () =>
             resolve(getReq.result ? getReq.result.key : null);
           getReq.onerror = () => reject(getReq.error);
@@ -152,32 +152,33 @@
 
       try {
         const deviceId = localStorage.getItem("device_token_id");
+        const pdsCodigo = localStorage.getItem("pds_codigo");
+
         console.log(
-          "🔑 [Checkin] Intentando validar Device ID local:",
-          deviceId,
+          "🔑 [Checkin] Buscando llave local para Oficina Código:",
+          pdsCodigo,
         );
 
-        if (!deviceId) {
+        if (!deviceId || !pdsCodigo) {
           throw new Error(
-            "No existe un ID de dispositivo ('device_token_id') en el LocalStorage.",
+            "Faltan identificadores ('device_token_id' o 'pds_codigo') en LocalStorage.",
           );
         }
 
-        // 1. Extraemos la llave privada vinculada a este uuid_server específico
-        const llavePrivada = await obtenerLlavePrivadaDesdeDB(deviceId);
+        // 1. Extraemos la llave privada desde IndexedDB mapeando por pds_codigo
+        const llavePrivada = await obtenerLlavePrivadaDesdeDB(pdsCodigo);
 
         if (!llavePrivada) {
           throw new Error(
-            `No se encontró ninguna llave criptográfica en IndexedDB para el ID: ${deviceId}`,
+            `No se encontró la firma criptográfica para el punto: ${pdsCodigo}`,
           );
         }
 
-        // 2. CREACIÓN DEL RETO CRIPTOGRÁFICO EN TIEMPO REAL
+        // 2. Creación del reto criptográfico (Timestamp firmado en caliente)
         const timestamp = Date.now().toString();
         const encoder = new TextEncoder();
         const datosAFirmar = encoder.encode(timestamp);
 
-        // Firmamos matemáticamente el timestamp usando ECDSA P-256
         const firmaBuffer = await window.crypto.subtle.sign(
           { name: "ECDSA", hash: { name: "SHA-256" } },
           llavePrivada,
@@ -187,9 +188,9 @@
           String.fromCharCode(...new Uint8Array(firmaBuffer)),
         );
 
-        // 3. ENVÍO DE PAYLOAD CRIPTOGRÁFICO LIGERO A LA EDGE FUNCTION
+        // 3. Envío del payload asimétrico optimizado a tu Edge Function
         console.log(
-          "🚀 [Checkin] Enviando firma digital a la Edge Function...",
+          "🚀 [Checkin] Transmitiendo firma digital verificable a Supabase...",
         );
         const response = await fetch(
           `${window.SUPABASE_URL}/functions/v1/asist_getToken`,
@@ -201,7 +202,7 @@
               Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
             },
             body: JSON.stringify({
-              device_id: deviceId,
+              device_id: deviceId, // Mantiene compatibilidad con el identificador del backend
               challenge: timestamp,
               firma: firmaBase64,
             }),
@@ -211,14 +212,12 @@
         const result = await response.json();
 
         if (!response.ok) {
-          console.error(
-            "❌ [Edge Function Error]:",
-            result.error || "Error desconocido",
+          throw new Error(
+            result.error || "Petición denegada por reglas del servidor.",
           );
-          throw new Error(result.error || "Denegado por reglas del Servidor.");
         }
 
-        // 4. Éxito: Renderizar QR con el Token Dinámico
+        // 4. Éxito: Pintar panel autorizado y renderizar QR dinámico
         if (result.token) {
           panelBloqueado?.classList.add("d-none");
           panelAutorizado?.classList.remove("d-none");
@@ -233,12 +232,11 @@
         }
       } catch (err) {
         console.error("🛑 [Fallo de Autenticación Asimétrica]:", err.message);
-
         detenerTimer();
         panelAutorizado?.classList.add("d-none");
         panelBloqueado?.classList.remove("d-none");
 
-        // Si fue un fallo de red o base de datos temporal, reintentamos en 6 segundos
+        // Reintento en segundo plano cada 6 segundos si se cae la red
         setTimeout(obtenerNuevoToken, 6000);
       }
     }
@@ -279,14 +277,12 @@
 
     async function inicializarValidacion() {
       const estaVinculadoLocal = localStorage.getItem("asist_vnc");
-
-      // Definimos la cadena exacta esperada en texto plano
       const TEXTO_ESPERADO = "vnc_active_Dispositivo vinculado";
       let textoDecodificado = "";
 
+      // Descifrado seguro tolerante a UTF-8 (Previene rupturas por la 'ó')
       if (estaVinculadoLocal) {
         try {
-          // Decodificación segura tolerante a caracteres UTF-8 (como la 'ó' con acento)
           textoDecodificado = decodeURIComponent(
             atob(estaVinculadoLocal)
               .split("")
@@ -296,7 +292,6 @@
               .join(""),
           );
         } catch (e) {
-          // Si falla la decodificación avanzada, intentamos la clásica por si acaso
           try {
             textoDecodificado = atob(estaVinculadoLocal);
           } catch (err) {
@@ -305,35 +300,29 @@
         }
       }
 
-      // Comparamos el texto real decodificado contra nuestra constante limpia
       if (!estaVinculadoLocal || textoDecodificado !== TEXTO_ESPERADO) {
-        console.warn(
-          "⚠️ [Checkin] Validación fallida. Valor en LocalStorage:",
-          estaVinculadoLocal,
-          "| Decodificado:",
-          textoDecodificado,
-        );
+        console.warn("⚠️ [Checkin] Token de vinculación alterado o ausente.");
         document.getElementById("panel-autorizado")?.classList.add("d-none");
         document.getElementById("panel-bloqueado")?.classList.remove("d-none");
         return;
       }
 
-      // Si pasa la prueba, pintamos la oficina con normalidad
       const pdsCodigo = localStorage.getItem("pds_codigo") || "---";
       const pdsNombre = localStorage.getItem("pds_nombre") || "Sin Nombre";
       const contenedorOficina = document.getElementById("info-oficina");
 
       if (contenedorOficina) {
         contenedorOficina.innerHTML = `
-        <i class="bi bi-geo-alt-fill me-1"></i>
-        OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
-    `;
+            <i class="bi bi-geo-alt-fill me-1"></i>
+            OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
+        `;
       }
 
       await obtenerNuevoToken();
     }
-    // Auto-ejecución con un retraso prudente para asegurar la carga completa del DOM
-    setTimeout(inicializarValidacion, 200);
+
+    // Auto-ejecución controlada tras render
+    setTimeout(inicializarValidacion, 150);
 
     return {
       revalidar: inicializarValidacion,
