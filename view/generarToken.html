@@ -124,6 +124,11 @@
         const request = indexedDB.open(DB_NAME, 1);
         request.onsuccess = (e) => {
           const db = e.target.result;
+          // Validamos si el store existe antes de abrir la transacción
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            resolve(null);
+            return;
+          }
           const transaction = db.transaction(STORE_NAME, "readonly");
           const store = transaction.objectStore(STORE_NAME);
           const getReq = store.get(uuidServer);
@@ -147,13 +152,23 @@
 
       try {
         const deviceId = localStorage.getItem("device_token_id");
+        console.log(
+          "🔑 [Checkin] Intentando validar Device ID local:",
+          deviceId,
+        );
+
+        if (!deviceId) {
+          throw new Error(
+            "No existe un ID de dispositivo ('device_token_id') en el LocalStorage.",
+          );
+        }
 
         // 1. Extraemos la llave privada vinculada a este uuid_server específico
         const llavePrivada = await obtenerLlavePrivadaDesdeDB(deviceId);
 
         if (!llavePrivada) {
           throw new Error(
-            "No se encontró la firma privada de este hardware localmente.",
+            `No se encontró ninguna llave criptográfica en IndexedDB para el ID: ${deviceId}`,
           );
         }
 
@@ -173,6 +188,9 @@
         );
 
         // 3. ENVÍO DE PAYLOAD CRIPTOGRÁFICO LIGERO A LA EDGE FUNCTION
+        console.log(
+          "🚀 [Checkin] Enviando firma digital a la Edge Function...",
+        );
         const response = await fetch(
           `${window.SUPABASE_URL}/functions/v1/asist_getToken`,
           {
@@ -193,10 +211,11 @@
         const result = await response.json();
 
         if (!response.ok) {
-          detenerTimer();
-          panelAutorizado?.classList.add("d-none");
-          panelBloqueado?.classList.remove("d-none");
-          return;
+          console.error(
+            "❌ [Edge Function Error]:",
+            result.error || "Error desconocido",
+          );
+          throw new Error(result.error || "Denegado por reglas del Servidor.");
         }
 
         // 4. Éxito: Renderizar QR con el Token Dinámico
@@ -213,15 +232,14 @@
           reiniciarContador(maxTime);
         }
       } catch (err) {
-        console.error(
-          "Fallo en la negociación del token asimétrico:",
-          err.message,
-        );
+        console.error("🛑 [Fallo de Autenticación Asimétrica]:", err.message);
+
         detenerTimer();
         panelAutorizado?.classList.add("d-none");
         panelBloqueado?.classList.remove("d-none");
-        // Reintento automático preventivo a los 5 segundos
-        setTimeout(obtenerNuevoToken, 5000);
+
+        // Si fue un fallo de red o base de datos temporal, reintentamos en 6 segundos
+        setTimeout(obtenerNuevoToken, 6000);
       }
     }
 
@@ -264,6 +282,9 @@
       const estaVinculadoLocal = localStorage.getItem("asist_vnc");
 
       if (estaVinculadoLocal !== marcaVinculado) {
+        console.warn(
+          "⚠️ [Checkin] Dispositivo no marcado en LocalStorage como vinculado.",
+        );
         document.getElementById("panel-autorizado")?.classList.add("d-none");
         document.getElementById("panel-bloqueado")?.classList.remove("d-none");
         return;
@@ -283,8 +304,8 @@
       await obtenerNuevoToken();
     }
 
-    // Auto-ejecución ordenada
-    setTimeout(inicializarValidacion, 100);
+    // Auto-ejecución con un retraso prudente para asegurar la carga completa del DOM
+    setTimeout(inicializarValidacion, 200);
 
     return {
       revalidar: inicializarValidacion,
