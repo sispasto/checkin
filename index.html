@@ -543,7 +543,123 @@
         ).show();
       }
 
-      // (Mantén tus funciones de updatePassword y logout intactas aquí abajo)
+      // ==========================================
+      // ACTUALIZAR CONTRASEÑA
+      // ==========================================
+      async function updatePassword() {
+        const claveNueva = document.getElementById("newPassword").value.trim();
+        const confirmacionClave = document
+          .getElementById("confirmNewPassword")
+          .value.trim();
+
+        if (!claveNueva || !confirmacionClave) {
+          alertSMS("Todos los campos son obligatorios");
+          return;
+        }
+
+        if (claveNueva !== confirmacionClave) {
+          alertSMS("Las claves no coinciden");
+          return;
+        }
+
+        if (claveNueva.length < 6) {
+          alertSMS("La clave debe tener al menos 6 caracteres");
+          return;
+        }
+
+        try {
+          const codigoUsuario = sessionStorage.getItem("codigoUsuario");
+
+          if (!codigoUsuario) {
+            alertSMS(
+              "No se encontró una sesión activa. Inicia sesión de nuevo.",
+            );
+            return;
+          }
+
+          const response = await fetch(
+            `${window.SUPABASE_URL}/functions/v1/asist_updatePassword`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: window.SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({
+                action: "updatePassword",
+                claveNueva: claveNueva,
+                codigoUsuario: codigoUsuario,
+              }),
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.status === "success") {
+            document.getElementById("newPassword").value = "";
+            document.getElementById("confirmNewPassword").value = "";
+
+            safeHideModal("changePasswordModal");
+
+            const offcanvasElement = document.getElementById(
+              "offcanvasDarkNavbar",
+            );
+            if (offcanvasElement) {
+              const bsOffcanvas =
+                bootstrap.Offcanvas.getInstance(offcanvasElement);
+              if (bsOffcanvas) bsOffcanvas.hide();
+            }
+
+            alertSMS("✅ Contraseña actualizada correctamente");
+          } else {
+            alertSMS("❌ " + (data.mensaje || "Error al actualizar"));
+          }
+        } catch (err) {
+          console.error("Error en updatePassword:", err);
+          alertSMS("Error de red: No se pudo conectar con el servidor.");
+        }
+      }
+
+      // ==========================================
+      // CERRAR SESIÓN (Mantiene el enlace del dispositivo)
+      // ==========================================
+      async function logout() {
+        try {
+          const { error } = await supabaseClient.auth.signOut();
+          if (error)
+            console.error("Error al cerrar sesión en Supabase:", error.message);
+
+          sessionStorage.clear();
+          sessionStorage.setItem("nombreUsuario", "");
+
+          Toolbar.mostrarMenuInvitado();
+
+          const fields = [
+            "username",
+            "password",
+            "newPassword",
+            "confirmNewPassword",
+          ];
+          fields.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+          });
+
+          const navbarCollapse = document.getElementById("navbarText");
+          if (navbarCollapse) {
+            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+            if (bsCollapse) bsCollapse.hide();
+          }
+
+          Toolbar.mostrarMenuInvitado();
+
+          if (typeof getHome === "function") getHome();
+          alertSMS("Sesión cerrada correctamente");
+        } catch (err) {
+          console.error("Error crítico en logout:", err);
+        }
+      }
     </script>
 
     <script>
