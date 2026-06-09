@@ -60,7 +60,7 @@ class WelcomeComponent extends HTMLElement {
   set versionApp(value) {
     this._versionApp = value;
     const label = this.querySelector("#version-label");
-    if (label) label.textContent = `Asist v${value}`;
+    if (label) label.textContent = `Checkin v${value}`;
   }
 
   get versionApp() {
