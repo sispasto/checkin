@@ -357,7 +357,7 @@
       }
 
       // ==========================================
-      // AUTENTICACIÓN MEJORADA CON CRIPTOGRAFÍA
+      // AUTENTICACIÓN MEJORADA CON CRIPTOGRAFÍA (Sincronizada con la Edge Function)
       // ==========================================
       async function authenticateUser() {
         const isPWA =
@@ -376,7 +376,7 @@
           let llavePrivada = await obtenerLlavePrivadaLocal();
           let llavePublicaExportada = "";
           let firmaBase64 = "";
-          let timestamp = Date.now().toString(); // Mensaje dinámico para evitar ataques de replay
+          let timestamp = Date.now().toString(); // Evita ataques de replay
 
           if (!llavePrivada) {
             // CASO DISPOSITIVO NUEVO: Generamos el par
@@ -421,9 +421,9 @@
                 usuario: usuario,
                 clave: clave,
                 is_pwa: !!isPWA,
-                llave_publica: llavePublicaExportada, // Solo va llena en el primer login
-                firma: firmaBase64, // Firma digital del intento actual
-                challenge: timestamp, // Mensaje verificado
+                llave_publica: llavePublicaExportada,
+                firma: firmaBase64,
+                challenge: timestamp,
               }),
             },
           );
@@ -434,7 +434,7 @@
             const { nombre, rol, persona_id, codigo, guardar_llave_local } =
               data;
 
-            // Si el servidor dio el visto bueno al primer registro, guardamos la privada localmente
+            // ¡MATCH PERFECTO CON SNAKE_CASE!
             if (guardar_llave_local) {
               await guardarLlavePrivadaLocal(llavePrivada);
               console.log(
@@ -442,12 +442,14 @@
               );
             }
 
-            Toolbar.mostrarMenuPorRol(rol, nombre);
+            // Guardamos la sesión de la tabla personalizada en sessionStorage
+            sessionStorage.setItem("sesionActiva", "true");
             sessionStorage.setItem("nombreUsuario", nombre);
             sessionStorage.setItem("userRol", rol);
             sessionStorage.setItem("personaId", persona_id || "");
             sessionStorage.setItem("codigoUsuario", codigo || "");
 
+            Toolbar.mostrarMenuPorRol(rol, nombre);
             safeHideModal("loginModal");
             document.getElementById("textUser").textContent = nombre;
 
@@ -485,38 +487,50 @@
       }
 
       // ==========================================
-      // VERIFICACIÓN & OTROS (MANTIENE TU LOGICA)
+      // VERIFICACIÓN REDISEÑADA PARA TU FLUJO PERSONALIZADO
       // ==========================================
       async function verificarSesion() {
-        const {
-          data: { session },
-        } = await supabaseClient.auth.getSession();
-        if (!session) {
+        // Comprobamos si hay sesión guardada localmente mediante nuestro login personalizado
+        const sesionActiva = sessionStorage.getItem("sesionActiva");
+        const nombre = sessionStorage.getItem("nombreUsuario");
+        const rol = sessionStorage.getItem("userRol");
+
+        if (sesionActiva !== "true" || !nombre || !rol) {
           Toolbar.mostrarMenuInvitado();
           return;
         }
+
         try {
+          // Ping silencioso a la Edge Function para validar que el servicio responda bien
           const response = await fetch(
             `${SUPABASE_URL}/functions/v1/asist_authUser`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${session.access_token}`,
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
               },
-              body: JSON.stringify({ action: "login_check" }), // Cambiado para no exigir firmas en reconexión simple silenciosa si aplica
+              body: JSON.stringify({ action: "login_check" }),
             },
           );
+
           const data = await response.json();
           if (data.status === "success") {
-            const { nombre, rol, persona_id } = data;
-            sessionStorage.setItem("nombreUsuario", nombre);
-            sessionStorage.setItem("userRol", rol);
-            sessionStorage.setItem("personaId", persona_id || "");
-            Toolbar.mostrarMenuPorRol(rol, nombre);
+            // Si todo está OK en el servidor, renderizamos el menú correspondiente
+            Toolbar.mostrarMenuPorRol(parseInt(rol), nombre);
+            document.getElementById("textUser").textContent = nombre;
+          } else {
+            logout(); // Si el backend rechaza, limpiamos de forma segura
           }
         } catch (error) {
-          console.error("Error verifying session:", error);
+          console.error(
+            "Error al verificar disponibilidad del servicio:",
+            error,
+          );
+          // Modo offline básico si falla la red: mantenemos visualmente la sesión del sessionStorage
+          Toolbar.mostrarMenuPorRol(parseInt(rol), nombre);
+          document.getElementById("textUser").textContent = nombre;
         }
       }
 
