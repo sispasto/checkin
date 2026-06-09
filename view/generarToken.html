@@ -278,32 +278,60 @@
     }
 
     async function inicializarValidacion() {
-      const marcaVinculado = btoa("vnc_active_Dispositivo vinculado");
       const estaVinculadoLocal = localStorage.getItem("asist_vnc");
 
-      if (estaVinculadoLocal !== marcaVinculado) {
+      // Definimos la cadena exacta esperada en texto plano
+      const TEXTO_ESPERADO = "vnc_active_Dispositivo vinculado";
+      let textoDecodificado = "";
+
+      if (estaVinculadoLocal) {
+        try {
+          // Decodificación segura tolerante a caracteres UTF-8 (como la 'ó' con acento)
+          textoDecodificado = decodeURIComponent(
+            atob(estaVinculadoLocal)
+              .split("")
+              .map(function (c) {
+                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+              })
+              .join(""),
+          );
+        } catch (e) {
+          // Si falla la decodificación avanzada, intentamos la clásica por si acaso
+          try {
+            textoDecodificado = atob(estaVinculadoLocal);
+          } catch (err) {
+            textoDecodificado = "";
+          }
+        }
+      }
+
+      // Comparamos el texto real decodificado contra nuestra constante limpia
+      if (!estaVinculadoLocal || textoDecodificado !== TEXTO_ESPERADO) {
         console.warn(
-          "⚠️ [Checkin] Dispositivo no marcado en LocalStorage como vinculado.",
+          "⚠️ [Checkin] Validación fallida. Valor en LocalStorage:",
+          estaVinculadoLocal,
+          "| Decodificado:",
+          textoDecodificado,
         );
         document.getElementById("panel-autorizado")?.classList.add("d-none");
         document.getElementById("panel-bloqueado")?.classList.remove("d-none");
         return;
       }
 
+      // Si pasa la prueba, pintamos la oficina con normalidad
       const pdsCodigo = localStorage.getItem("pds_codigo") || "---";
       const pdsNombre = localStorage.getItem("pds_nombre") || "Sin Nombre";
       const contenedorOficina = document.getElementById("info-oficina");
 
       if (contenedorOficina) {
         contenedorOficina.innerHTML = `
-            <i class="bi bi-geo-alt-fill me-1"></i>
-            OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
-        `;
+        <i class="bi bi-geo-alt-fill me-1"></i>
+        OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
+    `;
       }
 
       await obtenerNuevoToken();
     }
-
     // Auto-ejecución con un retraso prudente para asegurar la carga completa del DOM
     setTimeout(inicializarValidacion, 200);
 
