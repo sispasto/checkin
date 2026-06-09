@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           // 🔥 actualizar UI si estás en home
           const label = document.getElementById("version-label");
           if (label) {
-            label.textContent = `Asist v${versionApp}`;
+            label.textContent = `Checkin v${versionApp}`;
           }
         }
       }
