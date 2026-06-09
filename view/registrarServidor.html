@@ -122,7 +122,7 @@
               <div>
                 <h5 class="mb-0 fw-bold">Registro de Servidor Autorizado</h5>
                 <small class="text-white-50"
-                  >Protocolo de Identificación de Hardware</small
+                  >Protocolo de Identificación Criptográfica</small
                 >
               </div>
             </div>
@@ -132,7 +132,7 @@
             <div class="row g-4">
               <div class="col-md-5">
                 <h6 class="fw-bold mb-3 text-uppercase small text-muted">
-                  Análisis de ADN Digital
+                  Análisis de Canal y GPS
                 </h6>
                 <div
                   id="debug-info"
@@ -144,7 +144,7 @@
                       class="spinner-border spinner-border-sm mb-2"
                       role="status"
                     ></div>
-                    <br />Extrayendo specs...
+                    <br />Sincronizando telemetría...
                   </div>
                 </div>
               </div>
@@ -192,7 +192,7 @@
                       id="uuid_display"
                       rows="4"
                       readonly
-                      placeholder="Waiting for hardware trigger..."
+                      placeholder="Esperando inicialización criptográfica..."
                     ></textarea>
                   </div>
                 </div>
@@ -231,10 +231,45 @@
 
 <script>
   var nsRegistrarServer = (function () {
-    let caracteristicas = null;
-    let coordenadas = { latitud: null, longitud: null }; // Objeto para coordenadas
+    let coordenadas = { latitud: null, longitud: null };
 
-    // Función interna para obtener GPS
+    // Estructura de Base de Datos para las llaves criptográficas asimétricas
+    const DB_NAME = "ServerPdsCryptoDB";
+    const STORE_NAME = "config_keys";
+
+    function abrirIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: "pds_codigo" });
+          }
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function guardarLlavePrivadaLocal(pds_codigo, llavePrivada) {
+      const db = await abrirIndexedDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_NAME, "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        store.put({ pds_codigo: pds_codigo, key: llavePrivada });
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    async function generarParDeLlaves() {
+      return await window.crypto.subtle.generateKey(
+        { name: "ECDSA", namedCurve: "P-256" },
+        false, // La llave privada queda aislada del entorno JS por hardware virtual del navegador
+        ["sign", "verify"],
+      );
+    }
+
     function obtenerUbicacion() {
       return new Promise((resolve) => {
         if (!navigator.geolocation) {
@@ -266,70 +301,40 @@
       if (bar) bar.style.width = "100%";
 
       try {
-        // 1. OBTENER SPECS Y UBICACIÓN EN PARALELO
-        const [resultado, loc] = await Promise.all([
-          obtenerUUIDHardwareGlobal(),
-          obtenerUbicacion(),
-        ]);
+        // Obtenemos exclusivamente la localización GPS del laptop
+        coordenadas = await obtenerUbicacion();
 
-        caracteristicas = resultado.specs;
-        coordenadas = loc;
-
-        // 2. ACTUALIZAR PANEL IZQUIERDO (Incluyendo GPS)
-        if (infoDiv && caracteristicas) {
+        if (infoDiv) {
           infoDiv.innerHTML = "";
-          const labels = {
-            gpu: "GPU",
-            cores: "CPU",
-            memory: "RAM",
-            screen: "Monitor",
-          };
-
-          // Inyectar Hardware
-          for (const key in labels) {
-            if (caracteristicas[key]) {
-              infoDiv.innerHTML += `
-                        <div class="mb-2">
-                            <span class="tech-badge w-100 text-start">
-                                <span class="tech-label">${labels[key]}:</span> ${caracteristicas[key]}
-                            </span>
-                        </div>`;
-            }
-          }
-
-          // Inyectar Coordenadas si existen
           if (coordenadas) {
-            infoDiv.innerHTML += `
-                    <div class="mt-3 pt-2 border-top">
-                        <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="font-size:10px">Localización PDS</small>
-                        <span class="tech-badge w-100 text-start border-primary">
-                            <span class="tech-label text-primary"><i class="bi bi-geo-alt"></i> LAT:</span> ${coordenadas.latitud.toFixed(6)}
-                        </span>
-                        <span class="tech-badge w-100 text-start border-primary">
-                            <span class="tech-label text-primary"><i class="bi bi-geo-alt"></i> LON:</span> ${coordenadas.longitud.toFixed(6)}
-                        </span>
-                    </div>`;
+            infoDiv.innerHTML = `
+              <div class="pt-2">
+                  <small class="text-muted d-block mb-2 text-uppercase fw-bold" style="font-size:10px">Ubicación Confirmada GPS</small>
+                  <span class="tech-badge w-100 text-start border-primary mb-2">
+                      <span class="tech-label text-primary"><i class="bi bi-geo-alt"></i> LAT:</span> ${coordenadas.latitud.toFixed(6)}
+                  </span>
+                  <span class="tech-badge w-100 text-start border-primary">
+                      <span class="tech-label text-primary"><i class="bi bi-geo-alt"></i> LON:</span> ${coordenadas.longitud.toFixed(6)}
+                  </span>
+              </div>`;
           } else {
-            infoDiv.innerHTML += `<div class="text-warning small mt-2"><i class="bi bi-exclamation-triangle"></i> GPS no detectado</div>`;
+            infoDiv.innerHTML = `<div class="text-warning small py-4 text-center"><i class="bi bi-exclamation-triangle fs-4 d-block mb-2"></i> GPS no detectado.<br>Verifique los permisos de su laptop.</div>`;
           }
         }
 
-        // 3. LOGICA DE VINCULACIÓN (Terminal derecha)
         const marcaEsperada = btoa("vnc_active_Dispositivo vinculado");
         if (localStorage.getItem("asist_vnc") === marcaEsperada) {
           const idGuardado =
             localStorage.getItem("device_token_id") || "VNC-ACTIVE";
           setTimeout(() => {
             if (display) {
-              // Agregamos la longitud y un formato más limpio
               const lat = coordenadas?.latitud
                 ? coordenadas.latitud.toFixed(6)
                 : "N/A";
               const lon = coordenadas?.longitud
                 ? coordenadas.longitud.toFixed(6)
                 : "N/A";
-
-              display.value = `SISTEMA VINCULADO\nID: ${idGuardado}\nLAT: ${lat}\nLON: ${lon}`;
+              display.value = `SISTEMA CRIPTO-REGISTRADO\nID: ${idGuardado}\nLAT: ${lat}\nLON: ${lon}`;
             }
             if (bar) bar.style.width = "0%";
             if (btn) {
@@ -337,18 +342,17 @@
               btn.innerHTML =
                 '<i class="bi bi-lock-fill me-2"></i>EQUIPO AUTORIZADO';
             }
-          }, 600);
+          }, 400);
           return;
         }
 
         setTimeout(() => {
           if (display)
-            display.value =
-              "NV-" + Math.random().toString(36).substring(2, 11).toUpperCase();
+            display.value = "SISTEMA LISTO\nEsperando firma criptográfica...";
           if (bar) bar.style.width = "0%";
-        }, 800);
+        }, 500);
       } catch (e) {
-        console.error("Error en escaneo:", e);
+        console.error("Error en inicialización:", e);
       }
     }
 
@@ -358,17 +362,41 @@
       const codigoPDS = document.getElementById("codigo_pds").value.trim();
       const nombrePDS = document.getElementById("nombre_pds").value.trim();
 
-      if (!caracteristicas) {
-        alertSMS("Error: No se detectaron componentes de hardware.");
-        return;
-      }
-
       btn.disabled = true;
 
       try {
         const user = sessionStorage.getItem("codigoUsuario");
-        const currentClientID = localStorage.getItem("device_token_id");
 
+        // 1. GENERACIÓN ASIMÉTRICA DE LLAVES EN CALIENTE
+        const parLlaves = await generarParDeLlaves();
+        const llavePrivada = parLlaves.privateKey;
+
+        // Exportamos la llave pública en formato nativo JWK
+        const jwkPublica = await window.crypto.subtle.exportKey(
+          "jwk",
+          parLlaves.publicKey,
+        );
+
+        // EXTRAER CLIENT ID MATEMÁTICO DIRECTO DEL WEB CRYPTO:
+        // Limpiamos los caracteres especiales del parámetro 'x' para formar un ID alfanumérico impecable
+        const stringLimpioX = jwkPublica.x.replace(/[-_]/g, "").toUpperCase();
+        const currentClientID = `SRV-${stringLimpioX.substring(0, 16)}`;
+
+        // 2. RETO DE AUTENTICIDAD (Firmamos la marca temporal exacta)
+        const timestamp = Date.now().toString();
+        const encoder = new TextEncoder();
+        const datosAFirmar = encoder.encode(timestamp);
+
+        const firmaBuffer = await window.crypto.subtle.sign(
+          { name: "ECDSA", hash: { name: "SHA-256" } },
+          llavePrivada,
+          datosAFirmar,
+        );
+        const firmaBase64 = btoa(
+          String.fromCharCode(...new Uint8Array(firmaBuffer)),
+        );
+
+        // 3. COMUNICACIÓN HACIA TU EDGE FUNCTION EN SUPABASE
         const response = await fetch(
           `${window.SUPABASE_URL}/functions/v1/asist_registrarServer`,
           {
@@ -380,13 +408,16 @@
             },
             body: JSON.stringify({
               user: user,
-              device_id: currentClientID,
-              hardware_fingerprint: caracteristicas,
+              device_id: currentClientID, // Creado desde el corazón de la llave asimétrica
               pds_codigo: codigoPDS,
               pds_nombre: nombrePDS,
-              // ENVIAMOS LAS COORDENADAS
-              latitud: coordenadas.latitud,
-              longitud: coordenadas.longitud,
+              latitud: coordenadas ? coordenadas.latitud : null,
+              longitud: coordenadas ? coordenadas.longitud : null,
+
+              // Carga de Confianza Cero (Zero Trust)
+              llave_publica: JSON.stringify(jwkPublica),
+              challenge: timestamp,
+              firma: firmaBase64,
             }),
           },
         );
@@ -394,15 +425,25 @@
         const result = await response.json();
 
         if (response.ok && result.status === "success") {
-          localStorage.setItem("device_token_id", result.device_token_id || "");
-          localStorage.setItem("pds_codigo", result.codigo_pds || "");
-          localStorage.setItem("pds_nombre", result.nombre_pds || "");
+          // 4. AISLAMIENTO DE LA LLAVE PRIVADA EN INDEXEDDB
+          await guardarLlavePrivadaLocal(codigoPDS, llavePrivada);
+
+          // 5. VARIABLES DE PERSISTENCIA Y CONTROL LOCAL
+          localStorage.setItem(
+            "device_token_id",
+            result.device_token_id || currentClientID,
+          );
+          localStorage.setItem("pds_codigo", result.codigo_pds || codigoPDS);
+          localStorage.setItem("pds_nombre", result.nombre_pds || nombrePDS);
 
           localStorage.setItem(
             "asist_vnc",
             btoa("vnc_active_Dispositivo vinculado"),
           );
-          alertSMS("Dispositivo y Ubicación vinculados correctamente ✅");
+
+          alertSMS(
+            "Portátil vinculado mediante firma criptográfica con éxito ✅",
+          );
           setTimeout(() => location.reload(), 1000);
         } else {
           throw new Error(result.error || "Error en el servidor");
