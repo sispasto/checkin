@@ -41,12 +41,7 @@ export const MENUS = {
         <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(getHome)">
           <i class="bi bi-house-door-fill text-info"></i> <span>Inicio</span>
         </a>
-      </li>
-      <li class="nav-item mb-2">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(registrarTerminal)">
-          <i class="bi bi-phone-vibrate-fill"></i> <span>Registrar celular</span>
-        </a>
-      </li>
+      </li>      
       <li class="nav-item mb-2">
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(marcarAsistencia)">
           <i class="bi bi-check2-circle"></i> <span>Registrar Asistencia</span>
@@ -63,7 +58,11 @@ export const MENUS = {
         </a>
       </li>
     </ul>`,
-
+  /*<li class="nav-item mb-2">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(registrarTerminal)">
+          <i class="bi bi-phone-vibrate-fill"></i> <span>Registrar celular</span>
+        </a>
+      </li> */
   // ROL COORDINADOR
   COORDINADOR: `
     <ul class="navbar-nav flex-grow-1 pe-3 custom-menu">
