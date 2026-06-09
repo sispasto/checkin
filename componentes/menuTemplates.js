@@ -197,14 +197,14 @@ const MenuManager = {
     const textUser = document.getElementById("textUser");
 
     if (tituloMenu) {
-      tituloMenu.innerHTML = `<i class="bi bi-building-fill me-2"></i> ASIST`;
+      tituloMenu.innerHTML = `<i class="bi bi-building-fill me-2"></i> CHECKIN`;
       tituloMenu.style.fontSize = "1rem";
     }
 
     if (contenedor) contenedor.innerHTML = MENUS.DEFAULT();
 
     if (textUser) {
-      textUser.innerHTML = `<i class="bi bi-building-fill me-2"></i> ASIST`;
+      textUser.innerHTML = `<i class="bi bi-building-fill me-2"></i> CHECKIN`;
       textUser.style.fontSize = "1rem";
       textUser.style.maxWidth = "none"; // Sin límite para el nombre de la app
     }
