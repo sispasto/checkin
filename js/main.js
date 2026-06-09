@@ -7,66 +7,6 @@ let intervalSW = null;
 let newVersionAvailable = null;
 
 /***************************************************/
-
-// main.js - Función Global de Identificación de Hardware
-async function obtenerUUIDHardwareGlobal() {
-  const specs = {};
-  try {
-    // 1. Recolección de GPU
-    const canvasGL = document.createElement("canvas");
-    const gl =
-      canvasGL.getContext("webgl") || canvasGL.getContext("experimental-webgl");
-
-    if (gl) {
-      const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-      specs.gpu = debugInfo
-        ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-        : "Generic GPU";
-    } else {
-      specs.gpu = "Not Supported";
-    }
-
-    // 2. Hardware y Pantalla
-    specs.cores = navigator.hardwareConcurrency || "N/A";
-    specs.memory = navigator.deviceMemory
-      ? `${navigator.deviceMemory}GB`
-      : "N/A";
-    specs.screen = `${window.screen.width}x${window.screen.height}`;
-    specs.pixel_ratio = Math.round(window.devicePixelRatio || 1);
-    specs.langs = navigator.language;
-    specs.platform = navigator.platform;
-
-    // 3. Generación de Canvas DNA (Huella gráfica de renderizado)
-    const canvas2D = document.createElement("canvas");
-    const ctx = canvas2D.getContext("2d");
-    canvas2D.width = 200;
-    canvas2D.height = 40;
-
-    ctx.textBaseline = "top";
-    ctx.font = "14px 'Arial'";
-    ctx.fillStyle = "#f60";
-    ctx.fillRect(10, 10, 50, 10);
-    ctx.fillStyle = "#069";
-    ctx.fillText("ASIST-2026-FIXED", 15, 12);
-
-    // Guardamos la representación visual como base64
-    specs.canvas_dna = canvas2D.toDataURL();
-
-    // 4. Retorno puro de specs
-    return {
-      status: "ready",
-      specs: specs,
-    };
-  } catch (e) {
-    console.error("Error recolectando ingredientes de hardware:", e);
-    return {
-      status: "error",
-      specs: null,
-      message: e.message,
-    };
-  }
-}
-
 function registrarServidor() {
   let main = document.getElementById("App");
   removeALLChilds(main);
