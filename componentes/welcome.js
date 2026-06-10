@@ -34,7 +34,7 @@ class WelcomeComponent extends HTMLElement {
       // 4. Actualizar versión forzando el prefijo "Asist"
       const versionLabel = this.querySelector("#version-label");
       if (versionLabel) {
-        versionLabel.textContent = `Asist v${this.versionApp || "1.0"}`;
+        versionLabel.textContent = `Checkin v${this.versionApp || "1.0"}`;
       }
 
       // 5. Inyectar scripts dinámicos
