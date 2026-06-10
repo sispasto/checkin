@@ -184,11 +184,11 @@
     async function init() {
       const select = document.getElementById("selectPromotor");
       try {
-        // 1. Obtener specs de hardware y ID para seguridad
-        const hardware = await obtenerUUIDHardwareGlobal();
+        // 1. Obtener specs de  y ID para seguridad
+
         const deviceId = localStorage.getItem("device_token_id");
 
-        // 2. Llamar a la Edge Function (Método POST por seguridad de Hardware)
+        // 2. Llamar a la Edge Function (Método POST por seguridad de )
         const response = await fetch(
           `${window.SUPABASE_URL}/functions/v1/asist_getPromotoresHorarios`,
           {
