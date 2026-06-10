@@ -70,12 +70,7 @@ export const MENUS = {
         <a class="nav-link active d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(getHome)">
           <i class="bi bi-house-door-fill text-primary"></i> <span>Inicio</span>
         </a>
-      </li>
-      <li class="nav-item mb-3">
-        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(registrarTerminal)">
-          <i class="bi bi-device-hdd-fill"></i> <span>Registrar dispositivo</span>
-        </a>
-      </li>    
+      </li>      
       <li class="nav-item mb-3">
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(reportePromotores)">
           <i class="bi bi-file-earmark-bar-graph-fill"></i> <span>Reporte de promotores</span>
