@@ -7,3 +7,4 @@ import "./menuTemplates.js";
 import "./marcarAsistencia.js";
 import "./reporteComponent.js";
 import "./modificarHorarios.js";
+import "./desvincularTerminal.js";
