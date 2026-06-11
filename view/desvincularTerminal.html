@@ -1,0 +1,316 @@
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@300;400;600&display=swap");
+
+  :root {
+    --terminal-red: #ff5f56;
+    --dark-bg: #0d1117;
+  }
+
+  .pro-card-danger {
+    background: #ffffff;
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .pro-header-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #721c24 100%);
+    padding: 1.5rem !important;
+  }
+
+  .terminal-container-danger {
+    background: var(--dark-bg);
+    border-radius: 12px;
+    padding: 15px;
+    position: relative;
+    border: 1px solid #dc354540;
+  }
+
+  .hash-box-danger {
+    background: transparent !important;
+    color: var(--terminal-red) !important;
+    font-family: "Fira Code", monospace !important;
+    font-size: 0.85rem !important;
+    border: none !important;
+    outline: none !important;
+    resize: none;
+    box-shadow: none !important;
+  }
+
+  .btn-pro {
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    padding: 12px !important;
+  }
+
+  .btn-pro:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  }
+</style>
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+      <div class="card pro-card-danger border-0">
+        <div class="card-header pro-header-danger text-white border-0">
+          <div class="d-flex align-items-center">
+            <div
+              class="bg-white rounded-circle p-2 me-3"
+              style="--bs-bg-opacity: 0.2"
+            >
+              <i class="bi bi-shield-slash text-white fs-4"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold">
+                Desvinculación de Servidor Autorizado
+              </h5>
+              <small class="text-white-50"
+                >Revocación de Llave Criptográfica (`uuid_cliente` a
+                NULL)</small
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <div
+            class="row g-3 align-items-end mb-4 bg-light p-3 rounded-3 border"
+          >
+            <div class="col-md-8">
+              <label class="form-label fw-bold small text-muted"
+                >BUSCAR POR CÓDIGO DE USUARIO / PDS</label
+              >
+              <div class="input-group">
+                <span class="input-group-text bg-white"
+                  ><i class="bi bi-search"></i
+                ></span>
+                <input
+                  type="text"
+                  id="buscar_codigo"
+                  class="form-control"
+                  placeholder="Ej: 10234, 11877..."
+                />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <button
+                type="button"
+                class="btn btn-dark btn-pro w-100"
+                onclick="nsDesvincularTerminal.buscarServidor()"
+              >
+                <i class="bi bi-arrow-right-circle me-2"></i>VERIFICAR
+              </button>
+            </div>
+          </div>
+
+          <div id="resultado_busqueda" style="display: none">
+            <div class="row g-4">
+              <div class="col-md-5">
+                <h6 class="fw-bold mb-3 text-uppercase small text-muted">
+                  Datos Actuales de Base de Datos
+                </h6>
+                <div
+                  class="p-3 bg-light rounded-3 border"
+                  style="min-height: 160px"
+                >
+                  <p class="mb-2 small">
+                    <strong class="text-muted">Código:</strong>
+                    <span id="lbl_codigo" class="badge bg-secondary"></span>
+                  </p>
+                  <p class="mb-2 small">
+                    <strong class="text-muted">Rol Base:</strong>
+                    <span id="lbl_rol"></span>
+                  </p>
+                  <p class="mb-0 small">
+                    <strong class="text-muted">ID Registro:</strong>
+                    <span id="lbl_id"></span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="col-md-7">
+                <label class="form-label fw-bold small text-danger"
+                  >LLAVE CRIPTOGRÁFICA DETECTADA (UNIQUE)</label
+                >
+                <div class="terminal-container-danger mb-4">
+                  <div class="d-flex gap-1 mb-2">
+                    <div
+                      class="dot bg-danger"
+                      style="width: 10px; height: 10px; border-radius: 50%"
+                    ></div>
+                    <div
+                      class="dot bg-warning"
+                      style="width: 10px; height: 10px; border-radius: 50%"
+                    ></div>
+                    <div
+                      class="dot bg-secondary"
+                      style="width: 10px; height: 10px; border-radius: 50%"
+                    ></div>
+                  </div>
+                  <textarea
+                    class="form-control hash-box-danger"
+                    id="uuid_actual_display"
+                    rows="4"
+                    readonly
+                  ></textarea>
+                </div>
+
+                <button
+                  type="button"
+                  id="btnRevocar"
+                  class="btn btn-danger btn-pro w-100"
+                  onclick="nsDesvincularTerminal.eliminarLlaveCrypto()"
+                >
+                  <i class="bi bi-trash3-fill me-2"></i>ELIMINAR LLAVE CRYPTO
+                  (SET NULL)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="mensaje_estado" class="text-center text-muted py-5">
+            <i
+              class="bi bi-database-exclamation fs-2 d-block mb-2 text-black-50"
+            ></i>
+            Ingrese un código válido arriba para consultar el estado
+            criptográfico.
+          </div>
+        </div>
+
+        <div
+          class="card-footer bg-warning bg-opacity-10 p-3 text-center border-0 border-top border-warning border-opacity-25"
+        >
+          <p class="mb-0 text-danger small fw-medium">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            Atención: Esta acción romperá la relación Zero Trust de hardware del
+            cliente. El laptop perderá el acceso inmediatamente.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var nsDesvincularTerminal = (function () {
+    let registroEncontrado = null;
+
+    // 1. BUSCAR EL REGISTRO EN SUPABASE UTILIZANDO LA COLUMNA 'codigo'
+    async function buscarServidor() {
+      const codigoInput = document.getElementById("buscar_codigo").value.trim();
+      const resultadoDiv = document.getElementById("resultado_busqueda");
+      const mensajeDiv = document.getElementById("mensaje_estado");
+
+      if (!codigoInput) {
+        alert("Por favor ingrese un código para buscar.");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${window.SUPABASE_URL}/rest/v1/asist_usuario?codigo=eq.${codigoInput}&select=*`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+            },
+          },
+        );
+
+        const data = await response.json();
+
+        if (response.ok && data.length > 0) {
+          registroEncontrado = data[0];
+
+          document.getElementById("lbl_codigo").innerText =
+            registroEncontrado.codigo;
+          document.getElementById("lbl_rol").innerText = registroEncontrado.rol;
+          document.getElementById("lbl_id").innerText = registroEncontrado.id;
+
+          const txtUuid = document.getElementById("uuid_actual_display");
+
+          if (registroEncontrado.uuid_cliente) {
+            txtUuid.value = registroEncontrado.uuid_cliente;
+            document.getElementById("btnRevocar").disabled = false;
+          } else {
+            txtUuid.value =
+              "NULL (El registro ya se encuentra limpio / sin llave asignada)";
+            document.getElementById("btnRevocar").disabled = true;
+          }
+
+          mensajeDiv.style.display = "none";
+          resultadoDiv.style.display = "block";
+        } else {
+          registroEncontrado = null;
+          resultadoDiv.style.display = "none";
+          mensajeDiv.style.display = "block";
+          mensajeDiv.innerHTML = `<i class="bi bi-x-circle fs-2 text-danger d-block mb-2"></i> No se encontró ningún usuario con el código <b>${codigoInput}</b>.`;
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Error al conectar con la base de datos.");
+      }
+    }
+
+    // 2. ELIMINAR LA LLAVE DEJANDO LA COLUMNA EN 'NULL'
+    async function eliminarLlaveCrypto() {
+      if (!registroEncontrado) return;
+
+      const confirmar = confirm(
+        `¿Está seguro que desea eliminar la llave criptográfica del código ${registroEncontrado.codigo}?\nEsto liberará la restricción UNIQUE.`,
+      );
+      if (!confirmar) return;
+
+      const btn = document.getElementById("btnRevocar");
+      btn.disabled = true;
+      btn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>PROCESANDO REVOCACIÓN...';
+
+      try {
+        const response = await fetch(
+          `${window.SUPABASE_URL}/rest/v1/asist_usuario?codigo=eq.${registroEncontrado.codigo}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify({
+              uuid_cliente: null,
+            }),
+          },
+        );
+
+        if (response.ok) {
+          alert(
+            "Llave criptográfica eliminada con éxito. El campo ahora es NULL.",
+          );
+          document.getElementById("buscar_codigo").value = "";
+          document.getElementById("resultado_busqueda").style.display = "none";
+          const msg = document.getElementById("mensaje_estado");
+          msg.style.display = "block";
+          msg.innerHTML = `<i class="bi bi-check-circle-fill fs-2 text-success d-block mb-2"></i> Registro actualizado correctamente. Columna liberada.`;
+        } else {
+          const errData = await response.json();
+          throw new Error(
+            errData.message || "Error al actualizar la base de datos.",
+          );
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+        btn.disabled = false;
+        btn.innerHTML =
+          '<i class="bi bi-trash3-fill me-2"></i>ELIMINAR LLAVE CRYPTO (SET NULL)';
+      }
+    }
+
+    return { buscarServidor, eliminarLlaveCrypto };
+  })();
+</script>

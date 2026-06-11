@@ -139,6 +139,16 @@ function anularPlanilla() {
   main.appendChild(frmAnularPlanilla);
 }
 
+function eliminarKeyCrypto() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const frmEliminarKeyCrypto = document.createElement(
+    "desvincular-terminal-component",
+  );
+  frmEliminarKeyCrypto.setAttribute("container", "#App");
+  main.appendChild(frmEliminarKeyCrypto);
+}
+
 function getHome() {
   let main = document.getElementById("App");
   removeALLChilds(main);
@@ -147,7 +157,6 @@ function getHome() {
   const componente = document.createElement("welcome-component");
   componente.setAttribute("container", "#App");
   componente.versionApp = versionApp;
-
   main.appendChild(componente);
 }
 
