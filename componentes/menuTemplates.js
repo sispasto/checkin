@@ -81,6 +81,11 @@ export const MENUS = {
           <i class="bi bi-calendar-event-fill"></i> <span>Modificar Horarios</span>
         </a>
       </li> 
+      <li class="nav-item mb-3">
+        <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(eliminarKeyCrypto)">
+          <i class="bi bi-trash3"></i> <span>Eliminar key-Crypto</span>
+        </a>
+      </li>
       <li class="nav-item mt-4 border-top border-secondary pt-3">
         <a class="nav-link d-flex align-items-center gap-2" href="#" onclick="Toolbar.ejecutarAccion(showChangePasswordModal)">
           <i class="bi bi-shield-lock-fill text-success"></i> Seguridad
