@@ -14,9 +14,9 @@ class DesvincularTerminalComponent extends HTMLElement {
     }
 
     try {
-      // 1. Cargamos el archivo desvincularterminal.html con cache-busting
+      // 1. Cargamos el archivo desvincularTerminal.html con cache-busting
       const response = await fetch(
-        `view/desvincularterminal.html?v=${new Date().getTime()}`,
+        `view/desvincularTerminal.html?v=${new Date().getTime()}`,
         { cache: "no-store" },
       );
       const htmlText = await response.text();
@@ -54,7 +54,7 @@ class DesvincularTerminalComponent extends HTMLElement {
         container.appendChild(newScript);
       });
     } catch (error) {
-      console.error("Error al cargar desvincularterminal.html:", error);
+      console.error("Error al cargar desvincularTerminal.html:", error);
     }
   }
 
