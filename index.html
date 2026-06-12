@@ -544,6 +544,7 @@
       function showOtpModal() {
         safeHideModal("loginModal");
         new bootstrap.Modal(document.getElementById("otpModal")).show();
+        document.getElementById("otpCode").value = "";
       }
 
       async function validarOTP() {
