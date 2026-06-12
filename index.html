@@ -33,11 +33,6 @@
 
     <script type="module" src="componentes/index.js"></script>
     <link rel="manifest" href="manifest.json" />
-
-    <!--<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>
-      eruda.init();
-    </script>-->
   </head>
 
   <body>
@@ -121,11 +116,12 @@
         </button>
       </div>
     </div>
+
     <section id="header">
       <nav class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-          <a class="navbar-brand" id="textUser" href="#"></a
-          ><button
+          <a class="navbar-brand" id="textUser" href="#"></a>
+          <button
             class="navbar-toggler"
             type="button"
             data-bs-toggle="offcanvas"
@@ -154,6 +150,7 @@
           </div>
         </div>
       </nav>
+
       <div
         class="modal fade"
         id="loginModal"
@@ -194,10 +191,75 @@
                 </div>
                 <button
                   type="button"
-                  class="btn btn-primary w-100"
+                  class="btn btn-primary w-100 mb-3"
                   onclick="authenticateUser()"
                 >
                   Iniciar Sesión
+                </button>
+
+                <div class="text-center">
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm text-secondary text-decoration-none"
+                    onclick="showOtpModal()"
+                  >
+                    <i class="bi bi-shield-lock"></i> Ingresar Código OTP
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="modal fade"
+        id="otpModal"
+        tabindex="-1"
+        aria-labelledby="otpModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="otpModalLabel">
+                Validación de Dispositivo
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-muted small text-center">
+                Ingresa el código OTP proporcionado por tu coordinador para
+                desvincular tu sesión anterior.
+              </p>
+              <form id="otpForm">
+                <div class="mb-4">
+                  <label
+                    for="otpCode"
+                    class="form-label fw-bold text-center d-block"
+                    >Código OTP</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control text-center fs-3 fw-bold letter-spacing"
+                    id="otpCode"
+                    maxlength="8"
+                    placeholder="000000"
+                    style="letter-spacing: 4px"
+                    required
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-success w-100 fw-bold py-2"
+                  onclick="validarOTP()"
+                >
+                  Validar Código OTP
                 </button>
               </form>
             </div>
@@ -351,7 +413,7 @@
       async function generarParDeLlaves() {
         return await window.crypto.subtle.generateKey(
           { name: "ECDSA", namedCurve: "P-256" },
-          false, // false = No extraíble por seguridad
+          false,
           ["sign", "verify"],
         );
       }
@@ -372,19 +434,16 @@
         }
 
         try {
-          // 1. Verificar si este dispositivo ya cuenta con una llave privada en IndexedDB
           let llavePrivada = await obtenerLlavePrivadaLocal();
           let llavePublicaExportada = "";
           let firmaBase64 = "";
-          let timestamp = Date.now().toString(); // Mensaje dinámico para evitar ataques de replay
+          let timestamp = Date.now().toString();
 
           if (!llavePrivada) {
-            // CASO DISPOSITIVO NUEVO: Generamos el par
             console.log("[CRYPTO] Dispositivo nuevo. Generando llaves...");
             const parLlaves = await generarParDeLlaves();
             llavePrivada = parLlaves.privateKey;
 
-            // Exportamos la pública como String JWK para mandarla al servidor
             const jwkPublica = await window.crypto.subtle.exportKey(
               "jwk",
               parLlaves.publicKey,
@@ -392,7 +451,6 @@
             llavePublicaExportada = JSON.stringify(jwkPublica);
           }
 
-          // 2. Firmar digitalmente el timestamp con la llave privada
           const encoder = new TextEncoder();
           const datosAFirmar = encoder.encode(timestamp);
           const firmaBuffer = await window.crypto.subtle.sign(
@@ -401,12 +459,10 @@
             datosAFirmar,
           );
 
-          // Convertir firma binaria a Base64 para transportarla en el JSON
           firmaBase64 = btoa(
             String.fromCharCode(...new Uint8Array(firmaBuffer)),
           );
 
-          // 3. Enviamos la carga al servidor
           const response = await fetch(
             `${window.SUPABASE_URL}/functions/v1/asist_authUser`,
             {
@@ -421,9 +477,9 @@
                 usuario: usuario,
                 clave: clave,
                 is_pwa: !!isPWA,
-                llave_publica: llavePublicaExportada, // Solo va llena en el primer login
-                firma: firmaBase64, // Firma digital del intento actual
-                challenge: timestamp, // Mensaje verificado
+                llave_publica: llavePublicaExportada,
+                firma: firmaBase64,
+                challenge: timestamp,
               }),
             },
           );
@@ -434,7 +490,6 @@
             const { nombre, rol, persona_id, codigo, guardar_llave_local } =
               data;
 
-            // Si el servidor dio el visto bueno al primer registro, guardamos la privada localmente
             if (guardar_llave_local) {
               await guardarLlavePrivadaLocal(llavePrivada);
               console.log(
@@ -454,7 +509,6 @@
             if (typeof getHome === "function") getHome();
             alertSMS("Bienvenido " + nombre);
           } else {
-            // Manejo estructurado de errores crypto y auth
             if (data.errorCode === "PWA_REQUIRED") {
               alertSMS("📲 " + data.message);
               const pwaBlocker = document.getElementById("pwa-blocker");
@@ -484,6 +538,89 @@
         }
       }
 
+      // =========================================================
+      // LÓGICA OTP: AJUSTADO SOLO PARA EL CODIGO DEL PROMOTOR
+      // =========================================================
+      function showOtpModal() {
+        safeHideModal("loginModal");
+        new bootstrap.Modal(document.getElementById("otpModal")).show();
+      }
+
+      async function validarOTP() {
+        const otpCode = document.getElementById("otpCode").value.trim();
+
+        if (!otpCode) {
+          alertSMS("Por favor ingresa el código OTP.");
+          return;
+        }
+
+        try {
+          // El promotor solo envía el token; la Edge function buscará si existe y está activo
+          const response = await fetch(
+            `${window.SUPABASE_URL}/functions/v1/asist_validar_otp`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: window.SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({
+                otp: otpCode,
+              }),
+            },
+          );
+
+          const data = await response.json();
+
+          // Comprobamos si la función de Supabase retornó éxito u otp validado
+          if (data.status === "success" || data.message === "otp validado") {
+            alertSMS(
+              "✅ OTP Activo y Validado. Desvinculando dispositivo anterior...",
+            );
+
+            // Se procede a borrar la IndexedDB local
+            const reqBorrado = indexedDB.deleteDatabase(DB_NAME);
+
+            reqBorrado.onsuccess = () => {
+              console.log("[INDEXEDDB] Base de datos de llaves purgada.");
+              safeHideModal("otpModal");
+              alertSMS(
+                "Dispositivo desbloqueado. Inicia sesión normalmente para registrar tus nuevas credenciales.",
+              );
+
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            };
+
+            reqBorrado.onerror = (err) => {
+              console.error("Error al resetear IndexedDB:", err);
+              alertSMS(
+                "OTP Correcto, pero falló la limpieza física de la base de datos.",
+              );
+            };
+
+            reqBorrado.onblocked = () => {
+              console.warn(
+                "[INDEXEDDB] Borrado bloqueado, refrescando forzadamente.",
+              );
+              window.location.reload();
+            };
+          } else {
+            // El backend retorna que no está activo, ya se usó o no existe
+            alertSMS(
+              "❌ " +
+                (data.message ||
+                  "El OTP no se encuentra activo o es incorrecto."),
+            );
+          }
+        } catch (error) {
+          console.error("Error al validar OTP:", error);
+          alertSMS("Error de comunicación con el servicio de validación.");
+        }
+      }
+
       // ==========================================
       // VERIFICACIÓN & OTROS (MANTIENE TU LOGICA)
       // ==========================================
@@ -504,7 +641,7 @@
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${session.access_token}`,
               },
-              body: JSON.stringify({ action: "login_check" }), // Cambiado para no exigir firmas en reconexión simple silenciosa si aplica
+              body: JSON.stringify({ action: "login_check" }),
             },
           );
           const data = await response.json();
@@ -533,11 +670,12 @@
       }
 
       function showLoginModal() {
-        cerrarModalesActivos();
+        if (typeof cerrarModalesActivos === "function") cerrarModalesActivos();
         new bootstrap.Modal(document.getElementById("loginModal")).show();
       }
+
       function showChangePasswordModal() {
-        cerrarModalesActivos();
+        if (typeof cerrarModalesActivos === "function") cerrarModalesActivos();
         new bootstrap.Modal(
           document.getElementById("changePasswordModal"),
         ).show();
@@ -622,7 +760,7 @@
       }
 
       // ==========================================
-      // CERRAR SESIÓN (Mantiene el enlace del dispositivo)
+      // CERRAR SESIÓN
       // ==========================================
       async function logout() {
         try {
