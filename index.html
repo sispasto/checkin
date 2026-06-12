@@ -329,8 +329,27 @@
           const transaction = db.transaction(STORE_NAME, "readonly");
           const store = transaction.objectStore(STORE_NAME);
           const request = store.get("privada_terminal");
-          request.onsuccess = () =>
-            resolve(request.result ? request.result.key : null);
+
+          request.onsuccess = () => {
+            if (!request.result) return resolve(null);
+
+            const llaveRecuperada = request.result.key;
+
+            // 🔥 Corrección crucial: Si el navegador le quitó los permisos al guardarla,
+            // la reconstruimos manteniendo el objeto nativo y la máxima seguridad (extractable: false)
+            if (
+              !llaveRecuperada.usages ||
+              llaveRecuperada.usages.length === 0
+            ) {
+              Object.defineProperty(llaveRecuperada, "usages", {
+                value: ["sign"],
+                writable: false,
+                configurable: true,
+              });
+            }
+
+            resolve(llaveRecuperada);
+          };
           request.onerror = () => reject(request.error);
         });
       }
@@ -340,10 +359,13 @@
         return new Promise((resolve, reject) => {
           const transaction = db.transaction(STORE_NAME, "readwrite");
           const store = transaction.objectStore(STORE_NAME);
+
+          // Guardamos el objeto CryptoKey nativo directamente en la base de datos local
           const request = store.put({
             id: "privada_terminal",
             key: llavePrivada,
           });
+
           transaction.oncomplete = () => resolve();
           transaction.onerror = () => reject(transaction.error);
         });
