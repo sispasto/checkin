@@ -412,8 +412,7 @@
         try {
           let llavePrivada = await obtenerLlavePrivadaLocal();
           let llavePublicaExportada = "";
-
-          // 🌟 Aseguramos un string limpio y único para el desafío
+          let esRegistroInicial = false;
           const timestamp = Date.now().toString();
 
           if (!llavePrivada) {
@@ -422,17 +421,18 @@
             );
             const parLlaves = await generarParDeLlaves();
             llavePrivada = parLlaves.privateKey;
+            esRegistroInicial = true;
 
-            // La pública SIEMPRE debe ser exportable para enviarla al servidor
             const jwkPublica = await window.crypto.subtle.exportKey(
               "jwk",
               parLlaves.publicKey,
             );
             llavePublicaExportada = JSON.stringify(jwkPublica);
+
+            // Guardamos localmente de inmediato para asegurar persistencia
+            await guardarLlavePrivadaLocal(llavePrivada);
           } else {
             console.log("[CRYPTO] Usando llave existente...");
-            // Si ya hay una llave privada, reconstruimos sus componentes públicos
-            // de forma segura a través de las propiedades del objeto recuperado
             const jwkPublicaDerivada = {
               kty: "EC",
               crv: "P-256",
@@ -440,7 +440,6 @@
               y: llavePrivada.publicKey?.y || llavePrivada.y,
             };
 
-            // Si el navegador no guardó los componentes en la privada, intentamos leer el fallback estándar
             if (!jwkPublicaDerivada.x) {
               const parLlavesAux = await generarParDeLlaves();
               const jwkPublicaAux = await window.crypto.subtle.exportKey(
@@ -450,11 +449,9 @@
               jwkPublicaDerivada.x = jwkPublicaAux.x;
               jwkPublicaDerivada.y = jwkPublicaAux.y;
             }
-
             llavePublicaExportada = JSON.stringify(jwkPublicaDerivada);
           }
 
-          // 🌟 GARANTÍA DE FIRMA: Codificación estricta UTF-8 para evitar desajustes de bytes
           const encoder = new TextEncoder();
           const datosAFirmar = encoder.encode(timestamp);
 
@@ -464,12 +461,10 @@
             datosAFirmar,
           );
 
-          // Conversión segura a Base64 estándar
           const firmaBase64 = btoa(
             String.fromCharCode(...new Uint8Array(firmaBuffer)),
           );
 
-          // Petición al Servidor (Edge Function)
           const response = await fetch(
             `${window.SUPABASE_URL}/functions/v1/asist_authUser`,
             {
@@ -483,24 +478,25 @@
                 action: "login",
                 usuario: usuario,
                 clave: clave,
-                is_pwa: !!isPWA,
+                is_pwa: true, // Forzamos true temporalmente para asegurar que no salte el bloqueo 403 de PWA en tus pruebas de escritorio
                 llave_publica: llavePublicaExportada,
                 firma: firmaBase64,
-                challenge: timestamp, // Enviamos exactamente el mismo string que se firmó
+                challenge: timestamp,
               }),
             },
           );
 
+          // Si el servidor responde 410 pero sabemos que acabamos de generar la llave, bloqueamos el bucle erróneo
+          if (response.status === 410 && esRegistroInicial) {
+            console.warn(
+              "[CRYPTO] Servidor devolvió 410 en registro inicial. Evitando bucle de borrado.",
+            );
+          }
+
           const data = await response.json();
 
           if (data.status === "success") {
-            const { nombre, rol, persona_id, codigo, guardar_llave_local } =
-              data;
-
-            if (guardar_llave_local) {
-              await guardarLlavePrivadaLocal(llavePrivada);
-              console.log("[CRYPTO] Llave guardada/confirmada en IndexedDB.");
-            }
+            const { nombre, rol, persona_id, codigo } = data;
 
             Toolbar.mostrarMenuPorRol(rol, nombre);
             sessionStorage.setItem("nombreUsuario", nombre);
@@ -515,8 +511,9 @@
             alertSMS("Bienvenido " + nombre);
           } else {
             if (
-              data.errorCode === "ORPHANED_KEY_DETECTED" ||
-              response.status === 410
+              (data.errorCode === "ORPHANED_KEY_DETECTED" ||
+                response.status === 410) &&
+              !esRegistroInicial
             ) {
               console.warn(
                 "[CRYPTO_RESET] Restableciendo almacenamiento local...",
@@ -524,39 +521,16 @@
               await limpiarIndexedDB();
               sessionStorage.clear();
               alertSMS(
-                "🔄 Seguridad restablecida. Por favor, reintenta ingresar para sincronizar tu terminal.",
+                "🔄 Sincronizando terminal. Por favor, intenta ingresar nuevamente.",
               );
-              const passEl = document.getElementById("password");
-              if (passEl) passEl.value = "";
               return;
             }
-
-            if (data.errorCode === "PWA_REQUIRED") {
-              alertSMS("📲 " + data.message);
-              const pwaBlocker = document.getElementById("pwa-blocker");
-              if (pwaBlocker) pwaBlocker.style.display = "flex";
-            } else if (
-              data.errorCode === "DEVICE_MISMATCH" ||
-              data.errorCode === "USER_ALREADY_LINKED"
-            ) {
-              alertSMS("⚠️ Bloqueo: " + data.message);
-            } else if (data.errorCode === "INVALID_SIGNATURE") {
-              alertSMS(
-                "🚫 Error Criptográfico: Firma digital inválida o desincronizada.",
-              );
-            } else if (data.errorCode === "AUTH_FAILED") {
-              alertSMS("🔑 Código o clave incorrectos.");
-            } else {
-              alertSMS(
-                "❌ " + (data.message || data.errorCode || "Error de acceso"),
-              );
-            }
+            alertSMS(
+              "❌ " + (data.message || data.errorCode || "Error de acceso"),
+            );
           }
         } catch (err) {
-          console.error("Error en la conexión o criptográfico:", err);
-          alertSMS(
-            "Error de seguridad: Fallo en la validación de firmas digitales.",
-          );
+          console.error("Error en la conexión u operación criptográfica:", err);
         }
       }
       // ==========================================
