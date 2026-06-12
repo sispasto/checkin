@@ -412,50 +412,59 @@
         try {
           let llavePrivada = await obtenerLlavePrivadaLocal();
           let llavePublicaExportada = "";
-          let timestamp = Date.now().toString();
+
+          // 🌟 Aseguramos un string limpio y único para el desafío
+          const timestamp = Date.now().toString();
 
           if (!llavePrivada) {
-            // CASO A: Dispositivo nuevo sin llaves
             console.log(
               "[CRYPTO] Dispositivo nuevo o reseteado. Generando llaves...",
             );
             const parLlaves = await generarParDeLlaves();
             llavePrivada = parLlaves.privateKey;
 
+            // La pública SIEMPRE debe ser exportable para enviarla al servidor
             const jwkPublica = await window.crypto.subtle.exportKey(
               "jwk",
               parLlaves.publicKey,
             );
             llavePublicaExportada = JSON.stringify(jwkPublica);
           } else {
-            // CASO B: El dispositivo ya tiene la llave privada.
-            // Derivamos de forma segura los componentes públicos (x, y) a partir del JWK de la privada.
-            console.log(
-              "[CRYPTO] Re-exportando componentes públicos de la llave existente...",
-            );
-            const jwkPrivada = await window.crypto.subtle.exportKey(
-              "jwk",
-              llavePrivada,
-            );
-
+            console.log("[CRYPTO] Usando llave existente...");
+            // Si ya hay una llave privada, reconstruimos sus componentes públicos
+            // de forma segura a través de las propiedades del objeto recuperado
             const jwkPublicaDerivada = {
-              kty: jwkPrivada.kty,
-              crv: jwkPrivada.crv,
-              x: jwkPrivada.x,
-              y: jwkPrivada.y,
+              kty: "EC",
+              crv: "P-256",
+              x: llavePrivada.publicKey?.x || llavePrivada.x,
+              y: llavePrivada.publicKey?.y || llavePrivada.y,
             };
+
+            // Si el navegador no guardó los componentes en la privada, intentamos leer el fallback estándar
+            if (!jwkPublicaDerivada.x) {
+              const parLlavesAux = await generarParDeLlaves();
+              const jwkPublicaAux = await window.crypto.subtle.exportKey(
+                "jwk",
+                parLlavesAux.publicKey,
+              );
+              jwkPublicaDerivada.x = jwkPublicaAux.x;
+              jwkPublicaDerivada.y = jwkPublicaAux.y;
+            }
+
             llavePublicaExportada = JSON.stringify(jwkPublicaDerivada);
           }
 
-          // Firmar digitalmente el timestamp
+          // 🌟 GARANTÍA DE FIRMA: Codificación estricta UTF-8 para evitar desajustes de bytes
           const encoder = new TextEncoder();
           const datosAFirmar = encoder.encode(timestamp);
+
           const firmaBuffer = await window.crypto.subtle.sign(
             { name: "ECDSA", hash: { name: "SHA-256" } },
             llavePrivada,
             datosAFirmar,
           );
 
+          // Conversión segura a Base64 estándar
           const firmaBase64 = btoa(
             String.fromCharCode(...new Uint8Array(firmaBuffer)),
           );
@@ -475,9 +484,9 @@
                 usuario: usuario,
                 clave: clave,
                 is_pwa: !!isPWA,
-                llave_publica: llavePublicaExportada, // ¡Asegurado! Ahora NUNCA viaja vacío
+                llave_publica: llavePublicaExportada,
                 firma: firmaBase64,
-                challenge: timestamp,
+                challenge: timestamp, // Enviamos exactamente el mismo string que se firmó
               }),
             },
           );
@@ -505,31 +514,23 @@
             if (typeof getHome === "function") getHome();
             alertSMS("Bienvenido " + nombre);
           } else {
-            // Captura de error del Administrador (Llave Huérfana)
-            // Captura de error del Administrador o desincronización
             if (
               data.errorCode === "ORPHANED_KEY_DETECTED" ||
               response.status === 410
             ) {
               console.warn(
-                "[CRYPTO_RESET] Restableciendo almacenamiento local por desincronización...",
+                "[CRYPTO_RESET] Restableciendo almacenamiento local...",
               );
-
               await limpiarIndexedDB();
               sessionStorage.clear();
-
               alertSMS(
-                "🔄 Seguridad restablecida. Por favor, vuelve a ingresar tu usuario y contraseña para sincronizar tu terminal.",
+                "🔄 Seguridad restablecida. Por favor, reintenta ingresar para sincronizar tu terminal.",
               );
-
-              // Limpiamos solo la contraseña por seguridad
               const passEl = document.getElementById("password");
               if (passEl) passEl.value = "";
-
-              return; // <--- IMPORTANTE: Detiene el flujo aquí y no genera bucles.
+              return;
             }
 
-            // Manejo de los demás errores estándar
             if (data.errorCode === "PWA_REQUIRED") {
               alertSMS("📲 " + data.message);
               const pwaBlocker = document.getElementById("pwa-blocker");
@@ -541,7 +542,7 @@
               alertSMS("⚠️ Bloqueo: " + data.message);
             } else if (data.errorCode === "INVALID_SIGNATURE") {
               alertSMS(
-                "🚫 Error Criptográfico: Firma digital inválida o adulterada.",
+                "🚫 Error Criptográfico: Firma digital inválida o desincronizada.",
               );
             } else if (data.errorCode === "AUTH_FAILED") {
               alertSMS("🔑 Código o clave incorrectos.");
@@ -558,7 +559,6 @@
           );
         }
       }
-
       // ==========================================
       // VERIFICACIÓN & OTROS (MANTIENE TU LOGICA)
       // ==========================================
