@@ -8,3 +8,4 @@ import "./marcarAsistencia.js";
 import "./reporteComponent.js";
 import "./modificarHorarios.js";
 import "./desvincularTerminal.js";
+import "./generarOtpComponent.js";

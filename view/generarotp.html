@@ -1,0 +1,292 @@
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@300;400;600&display=swap");
+
+  :root {
+    --terminal-green: #2ecc71;
+    --dark-bg: #0d1117;
+  }
+
+  .pro-card-otp {
+    background: #ffffff;
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .pro-header-otp {
+    background: linear-gradient(135deg, #1a1c1e 0%, #2d3436 100%) !important;
+    padding: 1.5rem !important;
+  }
+
+  .promotor-select-otp {
+    border-radius: 12px !important;
+    padding: 12px !important;
+    border: 2px solid #e1e4e8 !important;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .promotor-select-otp:focus {
+    border-color: #0d6efd !important;
+    box-shadow: none !important;
+  }
+
+  .terminal-container-otp {
+    background: var(--dark-bg);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    border: 1px solid #2ecc7140;
+  }
+
+  .otp-display-box {
+    background: transparent !important;
+    color: var(--terminal-green) !important;
+    font-family: "Fira Code", monospace !important;
+    font-size: 2.2rem !important;
+    font-weight: bold;
+    letter-spacing: 6px;
+    border: none !important;
+    outline: none !important;
+    text-align: center;
+    box-shadow: none !important;
+    pointer-events: none; /* Evita que lo editen a mano */
+  }
+
+  .btn-pro {
+    border-radius: 12px !important;
+    padding: 14px !important;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-pro:active {
+    transform: scale(0.98);
+  }
+  
+  .btn-pro:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  }
+</style>
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+      <div class="card pro-card-otp border-0">
+        
+        <div class="card-header pro-header-otp text-white border-0">
+          <div class="d-flex align-items-center">
+            <div class="bg-primary rounded-circle p-2 me-3" style="--bs-bg-opacity: 0.2">
+              <i class="bi bi-shield-key-fill text-primary fs-4"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold text-white">Generador de Códigos OTP</h5>
+              <small class="text-white-50">Autorización para desvinculación de terminales móviles</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          
+          <div class="row mb-4">
+            <div class="col-12">
+              <label class="form-label fw-bold small text-muted text-uppercase">Seleccionar Promotor afectado</label>
+              <select
+                id="selectPromotorOtp"
+                class="form-select promotor-select-otp"
+                onchange="nsGenerarOtpCoordinador.seleccionarPromotor(this.value)"
+              >
+                <option value="">Cargando lista de personal...</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="panel_otp_control" style="display: none">
+            <div class="row g-4 align-items-center">
+              
+              <div class="col-md-5">
+                <h6 class="fw-bold mb-3 text-uppercase small text-muted">Información del Usuario</h6>
+                <div class="p-3 bg-light rounded-3 border" style="min-height: 140px">
+                  <p class="mb-2 small">
+                    <strong class="text-muted">Código / Usuario:</strong>
+                    <span id="otp_lbl_usuario" class="badge bg-dark fs-6 font-monospace"></span>
+                  </p>
+                  <p class="mb-0 small">
+                    <strong class="text-muted">Nombre Completo:</strong>
+                    <div id="otp_lbl_nombre" class="fw-bold text-secondary mt-1"></div>
+                  </p>
+                </div>
+              </div>
+
+              <div class="col-md-7">
+                <label class="form-label fw-bold small text-success text-uppercase">Token OTP Generado</label>
+                <div class="terminal-container-otp mb-3">
+                  <div class="d-flex gap-1 mb-2">
+                    <div class="dot bg-success" style="width: 10px; height: 10px; border-radius: 50%"></div>
+                    <div class="dot bg-warning" style="width: 10px; height: 10px; border-radius: 50%"></div>
+                    <div class="dot bg-secondary" style="width: 10px; height: 10px; border-radius: 50%"></div>
+                  </div>
+                  <input 
+                    type="text" 
+                    id="otp_output_display" 
+                    class="form-control otp-display-box" 
+                    value="------" 
+                    readonly 
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  id="btnGenerarOtpToken"
+                  class="btn btn-success btn-pro w-100 text-uppercase"
+                  onclick="nsGenerarOtpCoordinador.procesarPeticionOtp()"
+                >
+                  <i class="bi bi-cpu-fill me-2"></i>Generar Código OTP
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <div id="otp_mensaje_espera" class="text-center text-muted py-5">
+            <i class="bi bi-person-bounding-box fs-2 d-block mb-2 text-black-50"></i>
+            Seleccione un promotor del listado para habilitar la generación de llaves temporales.
+          </div>
+
+        </div>
+
+        <div class="card-footer bg-light p-3 text-center border-0 border-top">
+          <p class="mb-0 text-muted small">
+            <i class="bi bi-info-circle-fill me-1 text-primary"></i>
+            Entregue este código de forma verbal o directa al promotor. Tendrá una validez limitada para un solo uso.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var nsGenerarOtpCoordinador = (function () {
+    let cachePromotores = [];
+    let usuarioSeleccionado = null;
+
+    // 1. INICIALIZAR Y CARGAR PROMOTORES USANDO EL MÉTODO POST EXISTENTE
+    async function init() {
+      const select = document.getElementById("selectPromotorOtp");
+      try {
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_getPromotoresHorarios`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+              apikey: window.SUPABASE_ANON_KEY,
+            },
+          },
+        );
+
+        const result = await response.json();
+        if (result.status === "error") throw new Error(result.error);
+
+        cachePromotores = result.data;
+
+        select.innerHTML = '<option value="">-- Seleccione un Promotor --</option>';
+        cachePromotores.forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p.codigo;
+          opt.textContent = `${p.nombre} (${p.codigo})`;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.error("Error al inicializar Promotores:", e);
+        select.innerHTML = '<option value="">Error al cargar datos</option>';
+        if (typeof alertSMS === "function") alertSMS("Error: " + e.message);
+      }
+    }
+
+    // 2. DETECTAR SELECCIÓN DESDE CACHÉ LOCAL
+    function seleccionarPromotor(codigo) {
+      const panel = document.getElementById("panel_otp_control");
+      const mensajeEspera = document.getElementById("otp_mensaje_espera");
+      const displayOtp = document.getElementById("otp_output_display");
+
+      if (!codigo) {
+        usuarioSeleccionado = null;
+        panel.style.display = "none";
+        mensajeEspera.style.display = "block";
+        return;
+      }
+
+      const promotor = cachePromotores.find((item) => item.codigo === codigo);
+
+      if (promotor) {
+        usuarioSeleccionado = promotor;
+        document.getElementById("otp_lbl_usuario").innerText = promotor.codigo;
+        document.getElementById("otp_lbl_nombre").innerText = promotor.nombre;
+        
+        displayOtp.value = "------"; 
+        mensajeEspera.style.display = "none";
+        panel.style.display = "block";
+      }
+    }
+
+    // 3. ENVIAR SOLICITUD AL SERVIDOR (EL OTP SE GENERA EN LA EDGE FUNCTION)
+    async function procesarPeticionOtp() {
+      if (!usuarioSeleccionado) return;
+
+      const btn = document.getElementById("btnGenerarOtpToken");
+      const displayOtp = document.getElementById("otp_output_display");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>GENERANDO EN SERVIDOR...';
+
+      try {
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_generar_otp`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+              apikey: window.SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              usuario: usuarioSeleccionado.codigo // Modificado: Solo enviamos el código de usuario
+            }),
+          },
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.status === "success") {
+          // Extraemos el OTP generado internamente por tu backend en Deno
+          displayOtp.value = result.otp;
+          
+          if (typeof alertSMS === "function") {
+            alertSMS("¡Código OTP creado con éxito en el servidor! 🔑");
+          } else {
+            alert("¡Código OTP creado con éxito!");
+          }
+        } else {
+          throw new Error(result.message || "Error devuelto por el servidor.");
+        }
+      } catch (error) {
+        console.error("Error OTP:", error);
+        displayOtp.value = "ERROR";
+        alert("No se pudo registrar el OTP: " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-cpu-fill me-2"></i>Generar Código OTP';
+      }
+    }
+
+    setTimeout(init, 100);
+
+    return { seleccionarPromotor, procesarPeticionOtp };
+  })();
+</script>
