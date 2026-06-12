@@ -350,7 +350,8 @@
               Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
             },
             body: JSON.stringify({
-              codigoUsuario: codigoUsuario, //device_token_id: deviceTokenId, es el id del servidor es decir el portatil no se usa
+              codigoUsuario: codigoUsuario,
+              device_token_id: deviceTokenId,
               qr_data: qrContentPDS,
               lat: latEnvio,
               lng: lngEnvio,
