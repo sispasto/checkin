@@ -433,23 +433,28 @@
             await guardarLlavePrivadaLocal(llavePrivada);
           } else {
             console.log("[CRYPTO] Usando llave existente...");
-            const jwkPublicaDerivada = {
-              kty: "EC",
-              crv: "P-256",
-              x: llavePrivada.publicKey?.x || llavePrivada.x,
-              y: llavePrivada.publicKey?.y || llavePrivada.y,
-            };
 
-            if (!jwkPublicaDerivada.x) {
+            // 🔥 CORRECCIÓN CRUCIAL: Usamos exportKey para obtener el JWK nativo real
+            // de forma estructurada e idéntica a la guardada inicialmente.
+            try {
+              const jwkPublicaDerivada = await window.crypto.subtle.exportKey(
+                "jwk",
+                llavePrivada,
+              );
+              llavePublicaExportada = JSON.stringify(jwkPublicaDerivada);
+            } catch (exportError) {
+              console.error(
+                "[CRYPTO_ERROR] Error exportando llave existente:",
+                exportError,
+              );
+              // Fallback de emergencia si requiere regeneración por desincronización
               const parLlavesAux = await generarParDeLlaves();
               const jwkPublicaAux = await window.crypto.subtle.exportKey(
                 "jwk",
                 parLlavesAux.publicKey,
               );
-              jwkPublicaDerivada.x = jwkPublicaAux.x;
-              jwkPublicaDerivada.y = jwkPublicaAux.y;
+              llavePublicaExportada = JSON.stringify(jwkPublicaAux);
             }
-            llavePublicaExportada = JSON.stringify(jwkPublicaDerivada);
           }
 
           const encoder = new TextEncoder();
@@ -478,7 +483,7 @@
                 action: "login",
                 usuario: usuario,
                 clave: clave,
-                is_pwa: true, // Forzamos true temporalmente para asegurar que no salte el bloqueo 403 de PWA en tus pruebas de escritorio
+                is_pwa: true,
                 llave_publica: llavePublicaExportada,
                 firma: firmaBase64,
                 challenge: timestamp,
@@ -486,7 +491,6 @@
             },
           );
 
-          // Si el servidor responde 410 pero sabemos que acabamos de generar la llave, bloqueamos el bucle erróneo
           if (response.status === 410 && esRegistroInicial) {
             console.warn(
               "[CRYPTO] Servidor devolvió 410 en registro inicial. Evitando bucle de borrado.",
