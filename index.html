@@ -348,6 +348,21 @@
         });
       }
 
+      // NUEVA FUNCIÓN: Permite limpiar IndexedDB de raíz cuando el admin resetea al usuario
+      async function limpiarIndexedDB() {
+        const db = await abrirIndexedDB();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(STORE_NAME, "readwrite");
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.delete("privada_terminal");
+          transaction.oncomplete = () => {
+            console.log("[CRYPTO] IndexedDB limpiado con éxito.");
+            resolve();
+          };
+          transaction.onerror = () => reject(transaction.error);
+        });
+      }
+
       async function generarParDeLlaves() {
         return await window.crypto.subtle.generateKey(
           { name: "ECDSA", namedCurve: "P-256" },
@@ -357,7 +372,7 @@
       }
 
       // ==========================================
-      // AUTENTICACIÓN MEJORADA CON CRIPTOGRAFÍA
+      // AUTENTICACIÓN CORREGIDA (SIEMPRE ENVÍA LLAVE PÚBLICA)
       // ==========================================
       async function authenticateUser() {
         const isPWA =
@@ -372,27 +387,46 @@
         }
 
         try {
-          // 1. Verificar si este dispositivo ya cuenta con una llave privada en IndexedDB
           let llavePrivada = await obtenerLlavePrivadaLocal();
           let llavePublicaExportada = "";
-          let firmaBase64 = "";
-          let timestamp = Date.now().toString(); // Mensaje dinámico para evitar ataques de replay
+          let timestamp = Date.now().toString();
 
           if (!llavePrivada) {
-            // CASO DISPOSITIVO NUEVO: Generamos el par
-            console.log("[CRYPTO] Dispositivo nuevo. Generando llaves...");
+            // CASO A: Dispositivo nuevo sin llaves
+            console.log(
+              "[CRYPTO] Dispositivo nuevo o reseteado. Generando llaves...",
+            );
             const parLlaves = await generarParDeLlaves();
             llavePrivada = parLlaves.privateKey;
 
-            // Exportamos la pública como String JWK para mandarla al servidor
             const jwkPublica = await window.crypto.subtle.exportKey(
               "jwk",
               parLlaves.publicKey,
             );
             llavePublicaExportada = JSON.stringify(jwkPublica);
+          } else {
+            // CASO B: El dispositivo ya tiene la llave privada.
+            // SOLUCIÓN: Derivamos de forma segura los componentes públicos (x, y) usando trucos matemáticos
+            // de curvas elípticas de WebCrypto a partir de la privada, para poder enviarla SIEMPRE.
+            console.log(
+              "[CRYPTO] Re-exportando componentes públicos de la llave existente...",
+            );
+            const jwkPrivada = await window.crypto.subtle.exportKey(
+              "jwk",
+              llavePrivada,
+            );
+
+            // Un truco nativo de WebCrypto: Un JWK de clave privada ECDSA ya contiene los valores "x" e "y" de su contraparte pública.
+            const jwkPublicaDerivada = {
+              kty: jwkPrivada.kty,
+              crv: jwkPrivada.crv,
+              x: jwkPrivada.x,
+              y: jwkPrivada.y,
+            };
+            llavePublicaExportada = JSON.stringify(jwkPublicaDerivada);
           }
 
-          // 2. Firmar digitalmente el timestamp con la llave privada
+          // Firmar digitalmente el timestamp
           const encoder = new TextEncoder();
           const datosAFirmar = encoder.encode(timestamp);
           const firmaBuffer = await window.crypto.subtle.sign(
@@ -401,12 +435,11 @@
             datosAFirmar,
           );
 
-          // Convertir firma binaria a Base64 para transportarla en el JSON
-          firmaBase64 = btoa(
+          const firmaBase64 = btoa(
             String.fromCharCode(...new Uint8Array(firmaBuffer)),
           );
 
-          // 3. Enviamos la carga al servidor
+          // Petición al Servidor (Edge Function)
           const response = await fetch(
             `${window.SUPABASE_URL}/functions/v1/asist_authUser`,
             {
@@ -421,9 +454,9 @@
                 usuario: usuario,
                 clave: clave,
                 is_pwa: !!isPWA,
-                llave_publica: llavePublicaExportada, // Solo va llena en el primer login
-                firma: firmaBase64, // Firma digital del intento actual
-                challenge: timestamp, // Mensaje verificado
+                llave_publica: llavePublicaExportada, // ¡Asegurado! Ahora NUNCA viaja vacío
+                firma: firmaBase64,
+                challenge: timestamp,
               }),
             },
           );
@@ -434,12 +467,9 @@
             const { nombre, rol, persona_id, codigo, guardar_llave_local } =
               data;
 
-            // Si el servidor dio el visto bueno al primer registro, guardamos la privada localmente
             if (guardar_llave_local) {
               await guardarLlavePrivadaLocal(llavePrivada);
-              console.log(
-                "[CRYPTO] Llave privada guardada con éxito en IndexedDB de forma segura.",
-              );
+              console.log("[CRYPTO] Llave guardada/confirmada en IndexedDB.");
             }
 
             Toolbar.mostrarMenuPorRol(rol, nombre);
@@ -454,7 +484,29 @@
             if (typeof getHome === "function") getHome();
             alertSMS("Bienvenido " + nombre);
           } else {
-            // Manejo estructurado de errores crypto y auth
+            // --- NUEVO: Captura de error del Administrador (Llave Huérfana) ---
+            if (data.errorCode === "ORPHANED_KEY_DETECTED") {
+              console.warn(
+                "[CRYPTO_RESET] El admin limpió tu cuenta. Reseteando almacenamiento local...",
+              );
+
+              await limpiarIndexedDB(); // Borramos la llave privada local obsoleta
+              sessionStorage.clear(); // Limpiamos la sesión
+
+              alertSMS(
+                "🔄 Sincronizando los sistemas de seguridad del terminal... Reintentando.",
+              );
+
+              // Volvemos a invocar el login de forma automática transcurrido un segundo.
+              // En este segundo intento, irá por el "CASO A" (Dispositivo nuevo), generando llaves limpias.
+              setTimeout(async () => {
+                await authenticateUser();
+              }, 1200);
+
+              return;
+            }
+
+            // Manejo de los demás errores estándar
             if (data.errorCode === "PWA_REQUIRED") {
               alertSMS("📲 " + data.message);
               const pwaBlocker = document.getElementById("pwa-blocker");
@@ -466,7 +518,7 @@
               alertSMS("⚠️ Bloqueo: " + data.message);
             } else if (data.errorCode === "INVALID_SIGNATURE") {
               alertSMS(
-                "🚫 Error Criptográfico: Firma digital del dispositivo inválida o adulterada.",
+                "🚫 Error Criptográfico: Firma digital inválida o adulterada.",
               );
             } else if (data.errorCode === "AUTH_FAILED") {
               alertSMS("🔑 Código o clave incorrectos.");
@@ -479,7 +531,7 @@
         } catch (err) {
           console.error("Error en la conexión o criptográfico:", err);
           alertSMS(
-            "Error de seguridad: Error en la validación de firmas digitales del dispositivo.",
+            "Error de seguridad: Fallo en la validación de firmas digitales.",
           );
         }
       }
@@ -504,7 +556,7 @@
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${session.access_token}`,
               },
-              body: JSON.stringify({ action: "login_check" }), // Cambiado para no exigir firmas en reconexión simple silenciosa si aplica
+              body: JSON.stringify({ action: "login_check" }),
             },
           );
           const data = await response.json();
@@ -622,7 +674,7 @@
       }
 
       // ==========================================
-      // CERRAR SESIÓN (Mantiene el enlace del dispositivo)
+      // CERRAR SESIÓN
       // ==========================================
       async function logout() {
         try {
@@ -660,33 +712,6 @@
           console.error("Error crítico en logout:", err);
         }
       }
-    </script>
-
-    <script>
-      window.addEventListener("load", async () => {
-        const isPWA =
-          window.matchMedia("(display-mode: standalone)").matches ||
-          window.navigator.standalone;
-        const pwaBlocker = document.getElementById("pwa-blocker");
-
-        if (!isPWA) {
-          pwaBlocker.style.display = "flex";
-          return;
-        }
-
-        if (typeof verificarSesion === "function") {
-          await verificarSesion();
-        }
-
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker
-            .register("./service-worker.js")
-            .then((reg) => console.log("Service Worker registrado", reg.scope))
-            .catch((err) =>
-              console.error("Error registrando Service Worker", err),
-            );
-        }
-      });
     </script>
   </body>
 </html>
