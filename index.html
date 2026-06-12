@@ -484,24 +484,27 @@
             alertSMS("Bienvenido " + nombre);
           } else {
             // Captura de error del Administrador (Llave Huérfana)
-            if (data.errorCode === "ORPHANED_KEY_DETECTED") {
+            // Captura de error del Administrador o desincronización
+            if (
+              data.errorCode === "ORPHANED_KEY_DETECTED" ||
+              response.status === 410
+            ) {
               console.warn(
-                "[CRYPTO_RESET] El admin limpió tu cuenta. Reseteando almacenamiento local...",
+                "[CRYPTO_RESET] Restableciendo almacenamiento local por desincronización...",
               );
 
-              await limpiarIndexedDB(); // Borramos la llave obsoleta
-              sessionStorage.clear(); // Limpiamos la sesión
+              await limpiarIndexedDB();
+              sessionStorage.clear();
 
               alertSMS(
-                "🔄 Sincronizando los sistemas de seguridad del terminal... Reintentando.",
+                "🔄 Seguridad restablecida. Por favor, vuelve a ingresar tu usuario y contraseña para sincronizar tu terminal.",
               );
 
-              // Volvemos a invocar el login de forma automática transcurrido un segundo.
-              setTimeout(async () => {
-                await authenticateUser();
-              }, 1200);
+              // Limpiamos solo la contraseña por seguridad
+              const passEl = document.getElementById("password");
+              if (passEl) passEl.value = "";
 
-              return;
+              return; // <--- IMPORTANTE: Detiene el flujo aquí y no genera bucles.
             }
 
             // Manejo de los demás errores estándar
