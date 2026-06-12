@@ -374,7 +374,7 @@
       async function generarParDeLlaves() {
         return await window.crypto.subtle.generateKey(
           { name: "ECDSA", namedCurve: "P-256" },
-          false, // false = No extraíble por seguridad
+          true, // false = No extraíble por seguridad
           ["sign", "verify"],
         );
       }
