@@ -149,6 +149,14 @@ function eliminarKeyCrypto() {
   main.appendChild(frmEliminarKeyCrypto);
 }
 
+function generarOTP() {
+  let main = document.getElementById("App");
+  removeALLChilds(main);
+  const frmGenerarOTP = document.createElement("generar-otp-component");
+  frmGenerarOTP.setAttribute("container", "#App");
+  main.appendChild(frmGenerarOTP);
+}
+
 function getHome() {
   let main = document.getElementById("App");
   removeALLChilds(main);
