@@ -334,22 +334,7 @@
 
       try {
         // 1. OBTENER SPECS Y UBICACIÓN EN PARALELO
-        const [resultado, loc] = await Promise.all([
-          obtenerUUIDHardwareGlobal(),
-          obtenerUbicacion(),
-        ]);
-
-        // --- VALIDACIÓN DE UBICACIÓN ---
-        // Verificamos si loc existe y si contiene las propiedades necesarias
-        /*if (!loc || !loc.latitud || !loc.longitud) {
-          document.getElementById("ticket-asistencia").style.display = "none";
-          alertSMS(
-            "❌ Error: No se pudo obtener la ubicación. Asegúrate de tener el GPS encendido.",
-          );
-          return; // Detiene la ejecución de la función aquí
-        }*/
-
-        const caracteristicas = resultado.specs;
+        const [resultado, loc] = await Promise.all([obtenerUbicacion()]);
         const coordenadas = loc;
 
         const response = await fetch(
@@ -366,7 +351,6 @@
               qr_data: qrContentPDS,
               lat: coordenadas.latitud,
               lng: coordenadas.longitud,
-              hardware_fingerprint: caracteristicas,
             }),
           },
         );
