@@ -333,10 +333,14 @@
       alertSMS("Validando ubicación y dispositivo...");
 
       try {
-        // 1. OBTENER SPECS Y UBICACIÓN EN PARALELO
-        const [resultado, loc] = await Promise.all([obtenerUbicacion()]);
-        const coordenadas = loc;
+        // 1. OBTENER UBICACIÓN DE FORMA CORRECTA
+        const coordenadas = await obtenerUbicacion();
 
+        // Si la geolocalización falló por completo, evitamos enviar datos vacíos si tu backend es estricto
+        const latEnvio = coordenadas ? coordenadas.latitud : null;
+        const lngEnvio = coordenadas ? coordenadas.longitud : null;
+
+        // 2. PETICIÓN HTTP A LA EDGE FUNCTION
         const response = await fetch(
           `${window.SUPABASE_URL}/functions/v1/asist_registrar_asistencia`,
           {
@@ -349,18 +353,20 @@
               codigoUsuario: codigoUsuario,
               device_token_id: deviceTokenId,
               qr_data: qrContentPDS,
-              lat: coordenadas.latitud,
-              lng: coordenadas.longitud,
+              lat: latEnvio,
+              lng: lngEnvio,
             }),
           },
         );
 
         const data = await response.json();
 
-        if (data.status === "success") {
+        if (data.status === "success" || response.ok) {
           alertSMS("✅ ¡Asistencia Exitosa!");
-          document.getElementById("res-fecha").innerText = data.fecha;
-          document.getElementById("res-hora").innerText = data.hora;
+          document.getElementById("res-fecha").innerText =
+            data.fecha || "--/--/--";
+          document.getElementById("res-hora").innerText =
+            data.hora || "00:00:00";
           document.getElementById("ticket-asistencia").style.display = "block";
 
           document.getElementById("codigo-resultado").innerText =
@@ -370,12 +376,14 @@
             .classList.replace("text-muted", "text-success");
         } else {
           document.getElementById("ticket-asistencia").style.display = "none";
-          alertSMS("❌ Error: " + (data.message || data.errorCode));
+          alertSMS(
+            "❌ Error: " +
+              (data.message || data.errorCode || "Error desconocido"),
+          );
         }
       } catch (error) {
         console.error("Error en la petición:", error);
         document.getElementById("ticket-asistencia").style.display = "none";
-        // Si el error viene específicamente de obtenerUbicacion(), lo manejamos aquí también
         alertSMS("Error de red o permisos: No se pudo completar la operación.");
       }
     }
