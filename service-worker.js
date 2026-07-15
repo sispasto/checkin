@@ -7,11 +7,11 @@ self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
-        "/checkin/",
-        "/checkin/index.html",
-        "/checkin/css/home.css",
-        "/checkin/js/main.js",
-        "/checkin/componentes/index.js",
+        "./", // 🔄 Corregido: ruta raíz relativa
+        "./index.html", // 🔄 Corregido: ruta raíz relativa
+        "./css/home.css", // 🔄 Corregido: ruta raíz relativa
+        "./js/main.js", // 🔄 Corregido: ruta raíz relativa
+        "./componentes/index.js", // 🔄 Corregido: ruta raíz relativa
       ]);
     }),
   );
@@ -33,7 +33,6 @@ self.addEventListener("activate", (e) => {
 
 // ESCUCHA DE PUSH (Ya no valida admin, confía en el servidor)
 self.addEventListener("push", (event) => {
-  // NO uses una función externa async aparte si no retorna la promesa correctamente
   event.waitUntil(procesarNotificacionPush(event));
 });
 
@@ -45,28 +44,26 @@ async function procesarNotificacionPush(event) {
     console.error(e);
   }
 
-  // IMPORTANTE: El 'tag' es lo que agrupa y evita duplicados
   const options = {
     body: data.body,
-    icon: "/checkin/assets/icon_push-192x192.png",
-    badge: "/checkin/assets/badge.png",
-    tag: "reporte-asistencia", // <--- Mismo tag siempre
+    icon: "./assets/icon_push-192x192.png", // 🔄 Corregido a ruta relativa
+    badge: "./assets/badge.png", // 🔄 Corregido a ruta relativa
+    tag: "reporte-asistencia",
     renotify: true,
     data: {
-      url: data.url || "/checkin/index.html",
+      url: data.url || "./index.html", // 🔄 Corregido a ruta relativa
     },
   };
 
-  // ESTA LÍNEA es la que calla a Chrome
   return self.registration.showNotification(data.title, options);
 }
 
-// CLICK EN NOTIFICACIÓN - Versión Corregida
+// CLICK EN NOTIFICACIÓN - Versión Corregida para Dominio Raíz
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  // Obtenemos la URL que mandó la Edge Function
-  const urlDestino = event.notification.data?.url || "/checkin/index.html";
+  // Obtenemos la URL de destino o por defecto la raíz de la app
+  const urlDestino = event.notification.data?.url || "./index.html"; // 🔄 Corregido
 
   event.waitUntil(
     clients
@@ -74,9 +71,8 @@ self.addEventListener("notificationclick", (event) => {
       .then((clientList) => {
         // Si la app ya está abierta en alguna pestaña
         for (const client of clientList) {
-          // Verificamos si es nuestra App (ajusta el path si es necesario)
-          if (client.url.includes("/checkin/") && "navigate" in client) {
-            // ¡ESTA ES LA MAGIA! Forzamos a la pestaña abierta a ir al reporte
+          // 🔄 Corregido: Ya no buscamos "/checkin/", sino que valide la URL actual
+          if (client.url.includes(location.origin) && "navigate" in client) {
             client.navigate(urlDestino);
             return client.focus();
           }
