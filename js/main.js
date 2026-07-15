@@ -288,49 +288,45 @@ function mostrarBotonActualizacion() {
 }
 
 /* =========================
-   INIT
+   INIT (Corregido para checkin.devlaap.com)
 ========================= */
 document.addEventListener("DOMContentLoaded", async function () {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./service-worker.js", {
-        // Al usar "./" buscamos en la carpeta actual, sin importar el dominio
-        scope: "/checkin/",
+        //  Cambiado de "/checkin/" a "./" para abarcar todo el dominio raíz
+        scope: "./",
         updateViaCache: "none",
       })
       .then((reg) => {
         swRegistration = reg;
 
-        // 🔥 iniciar revisión automática
+        //  iniciar revisión automática
         iniciarAutoUpdateSW();
 
-        // 🔥 SIEMPRE obtener versión (incluye primera carga)
-        // En lugar de llamar a ready inmediatamente, espera a que el SW esté activo
+        //  SIEMPRE obtener versión (incluye primera carga)
         navigator.serviceWorker.ready.then((regReady) => {
-          // Solo enviamos el mensaje si realmente hay un SW controlando la página
           if (regReady.active && navigator.serviceWorker.controller) {
             regReady.active.postMessage("GET_VERSION");
           }
         });
 
-        // 🔥 si ya hay una versión en espera
+        //  si ya hay una versión en espera
         if (reg.waiting && navigator.serviceWorker.controller) {
-          //console.log("SW ya estaba esperando");
           mostrarBotonActualizacion();
         }
 
-        // 🔥 detectar nueva versión
+        //  detectar nueva versión
         reg.onupdatefound = () => {
           const newSW = reg.installing;
           if (!newSW) return;
 
           newSW.onstatechange = () => {
             if (newSW.state === "installed") {
-              // Solo si ya hay una app corriendo (no primera instalación)
               if (navigator.serviceWorker.controller) {
                 console.log("Nueva versión disponible");
 
-                // 🔥 pedir versión del NUEVO SW
+                //  pedir versión del NUEVO SW
                 newSW.postMessage("GET_VERSION");
 
                 if (reg.waiting) {
@@ -343,20 +339,19 @@ document.addEventListener("DOMContentLoaded", async function () {
       })
       .catch((error) => console.error("Error al registrar el SW:", error));
 
-    // 🔥 recibir versión
+    //  recibir versión
     navigator.serviceWorker.addEventListener("message", (event) => {
       if (event.data.type === "VERSION") {
         if (swRegistration && swRegistration.waiting) {
-          // 🔥 nueva versión (NO aplicar aún)
+          //  nueva versión (NO aplicar aún)
           newVersionAvailable = event.data.version;
-          //console.log("Nueva versión detectada:", newVersionAvailable);
           mostrarBotonActualizacion();
         } else {
-          // 🔥 versión actual activa
+          //  versión actual activa
           versionApp = event.data.version;
           localStorage.setItem("asist_app_version", versionApp);
 
-          // 🔥 actualizar UI si estás en home
+          //  actualizar UI si estás en home
           const label = document.getElementById("version-label");
           if (label) {
             label.textContent = `Checkin v${versionApp}`;
@@ -365,16 +360,15 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     });
 
-    // 🔥 recargar SOLO cuando usuario acepta actualización
+    //  recargar SOLO cuando usuario acepta actualización
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       window.location.reload();
     });
 
-    // 🔥 revisar actualización al volver a la pestaña
+    //  revisar actualización al volver a la pestaña
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         if (swRegistration) {
-          //console.log("Validando actualizaciones...");
           swRegistration.update();
         }
       }
