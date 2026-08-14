@@ -436,10 +436,12 @@
           localStorage.setItem("pds_codigo", result.codigo_pds || codigoPDS);
           localStorage.setItem("pds_nombre", result.nombre_pds || nombrePDS);
 
-          localStorage.setItem(
-            "asist_vnc",
-            btoa("vnc_active_Dispositivo vinculado"),
-          );
+          // ✅ AHORA (Seguro para caracteres especiales y UTF-8):
+          const textoVinculacion = "vnc_active_Dispositivo vinculado";
+          const bytesVinculacion = new TextEncoder().encode(textoVinculacion);
+          const base64Seguro = btoa(String.fromCharCode(...bytesVinculacion));
+
+          localStorage.setItem("asist_vnc", base64Seguro);
 
           alertSMS(
             "Portátil vinculado mediante firma criptográfica con éxito ✅",

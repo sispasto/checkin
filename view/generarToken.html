@@ -280,28 +280,25 @@
       const TEXTO_ESPERADO = "vnc_active_Dispositivo vinculado";
       let textoDecodificado = "";
 
-      // Descifrado seguro tolerante a UTF-8 (Previene rupturas por la 'ó')
       if (estaVinculadoLocal) {
         try {
-          textoDecodificado = decodeURIComponent(
-            atob(estaVinculadoLocal)
-              .split("")
-              .map(function (c) {
-                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-              })
-              .join(""),
+          // Decodificación UTF-8 estándar limpia y sin fallos
+          const bytes = Uint8Array.from(atob(estaVinculadoLocal.trim()), (c) =>
+            c.charCodeAt(0),
           );
+          textoDecodificado = new TextDecoder("utf-8").decode(bytes).trim();
         } catch (e) {
-          try {
-            textoDecodificado = atob(estaVinculadoLocal);
-          } catch (err) {
-            textoDecodificado = "";
-          }
+          console.error("❌ Error al decodificar asist_vnc:", e);
+          textoDecodificado = "";
         }
       }
 
+      // Si no coincide, imprimimos en consola exactamente qué se obtuvo para auditoría
       if (!estaVinculadoLocal || textoDecodificado !== TEXTO_ESPERADO) {
         console.warn("⚠️ [Checkin] Token de vinculación alterado o ausente.");
+        console.log("Esperado:", `"${TEXTO_ESPERADO}"`);
+        console.log("Obtenido en Storage:", `"${textoDecodificado}"`);
+
         document.getElementById("panel-autorizado")?.classList.add("d-none");
         document.getElementById("panel-bloqueado")?.classList.remove("d-none");
         return;
@@ -313,9 +310,9 @@
 
       if (contenedorOficina) {
         contenedorOficina.innerHTML = `
-            <i class="bi bi-geo-alt-fill me-1"></i>
-            OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
-        `;
+        <i class="bi bi-geo-alt-fill me-1"></i>
+        OFICINA ${pdsCodigo} - ${pdsNombre.toUpperCase()}
+    `;
       }
 
       await obtenerNuevoToken();
