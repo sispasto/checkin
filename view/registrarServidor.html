@@ -460,3 +460,465 @@
     return { procesarFormulario, iniciarGeneracion };
   })();
 </script>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@300;400;600&display=swap");
+
+  :root {
+    --terminal-green: #00ff41;
+    --dark-bg: #0d1117;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+  }
+
+  .pro-card {
+    background: #ffffff;
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .pro-header {
+    background: linear-gradient(135deg, #212529 0%, #000000 100%);
+    padding: 1.5rem !important;
+  }
+
+  /* Sección de la Llave Estilo Terminal */
+  .terminal-container {
+    background: var(--dark-bg);
+    border-radius: 12px;
+    padding: 15px;
+    position: relative;
+    border: 1px solid #30363d;
+  }
+
+  .terminal-header {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-r {
+    background: #ff5f56;
+  }
+  .dot-y {
+    background: #ffbd2e;
+  }
+  .dot-g {
+    background: #27c93f;
+  }
+
+  .hash-box-style {
+    background: transparent !important;
+    color: var(--terminal-green) !important;
+    font-family: "Fira Code", monospace !important;
+    font-size: 0.85rem !important;
+    border: none !important;
+    outline: none !important;
+    resize: none;
+    box-shadow: none !important;
+  }
+
+  /* Etiquetas de Datos Técnicos */
+  .tech-badge {
+    background: #f0f2f5;
+    color: #495057;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-block;
+    margin: 2px;
+    border: 1px solid #e1e4e8;
+  }
+
+  .tech-label {
+    color: #0d6efd;
+    font-weight: 600;
+    margin-right: 5px;
+    text-transform: uppercase;
+  }
+
+  /* Animación de escaneo */
+  .scanning-bar {
+    height: 2px;
+    background: var(--terminal-green);
+    width: 0%;
+    box-shadow: 0 0 10px var(--terminal-green);
+    transition: width 0.5s ease;
+  }
+
+  .btn-pro {
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    padding: 12px !important;
+  }
+
+  .btn-pro:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+</style>
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+      <form
+        id="formRegistroServer"
+        onsubmit="nsRegistrarServer.procesarFormulario(event, this)"
+      >
+        <div class="card pro-card border-0">
+          <div class="card-header pro-header text-white border-0">
+            <div class="d-flex align-items-center">
+              <div
+                class="bg-primary rounded-circle p-2 me-3"
+                style="--bs-bg-opacity: 0.2"
+              >
+                <i class="bi bi-cpu text-primary fs-4"></i>
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold">Registro de Servidor Autorizado</h5>
+                <small class="text-white-50"
+                  >Protocolo de Identificación Criptográfica</small
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body p-4">
+            <div class="row g-4">
+              <div class="col-md-5">
+                <h6 class="fw-bold mb-3 text-uppercase small text-muted">
+                  Análisis de Canal y GPS
+                </h6>
+                <div
+                  id="debug-info"
+                  class="p-3 bg-light rounded-3 border"
+                  style="min-height: 200px"
+                >
+                  <div class="text-center text-muted py-4">
+                    <div
+                      class="spinner-border spinner-border-sm mb-2"
+                      role="status"
+                    ></div>
+                    <br />Sincronizando telemetría...
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-7">
+                <div class="row g-2 mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold small text-muted"
+                      >CÓDIGO PDS</label
+                    >
+                    <input
+                      type="text"
+                      id="codigo_pds"
+                      class="form-control"
+                      placeholder="Ej: 001"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-8">
+                    <label class="form-label fw-bold small text-muted"
+                      >NOMBRE PDS</label
+                    >
+                    <input
+                      type="text"
+                      id="nombre_pds"
+                      class="form-control"
+                      placeholder="Ej: Central Principal"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label fw-bold small"
+                    >IDENTIFICADOR ÚNICO GENERADO</label
+                  >
+                  <div class="terminal-container">
+                    <div class="terminal-header">
+                      <div class="dot dot-r"></div>
+                      <div class="dot dot-y"></div>
+                      <div class="dot dot-g"></div>
+                    </div>
+                    <div class="scanning-bar mb-2" id="scan-bar"></div>
+                    <textarea
+                      class="form-control hash-box-style"
+                      id="uuid_display"
+                      rows="4"
+                      readonly
+                      placeholder="Esperando inicialización criptográfica..."
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-pro flex-fill"
+                    onclick="nsRegistrarServer.iniciarGeneracion()"
+                  >
+                    <i class="bi bi-arrow-clockwise me-2"></i>REESCANEAR
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-dark btn-pro flex-fill"
+                    id="btnGuardar"
+                  >
+                    <i class="bi bi-shield-check me-2"></i>VINCULAR AHORA
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer bg-light p-3 text-center border-0">
+            <p class="mb-0 text-muted small">
+              <i class="bi bi-info-circle me-1"></i> Esta llave es
+              intransferible y vincula físicamente este equipo a su cuenta.
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  var nsRegistrarServer = (function () {
+    let coordenadas = { latitud: null, longitud: null };
+
+    // Estructura de Base de Datos para las llaves criptográficas asimétricas
+    const DB_NAME = "ServerPdsCryptoDB";
+    const STORE_NAME = "config_keys";
+
+    function abrirIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: "pds_codigo" });
+          }
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function guardarLlavePrivadaLocal(pds_codigo, llavePrivada) {
+      const db = await abrirIndexedDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_NAME, "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        store.put({ pds_codigo: pds_codigo, key: llavePrivada });
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    async function generarParDeLlaves() {
+      return await window.crypto.subtle.generateKey(
+        { name: "ECDSA", namedCurve: "P-256" },
+        false, // La llave privada queda aislada del entorno JS por hardware virtual del navegador
+        ["sign", "verify"],
+      );
+    }
+
+    function obtenerUbicacion() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          console.warn("Geolocalización no soportada");
+          resolve(null);
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            resolve({
+              latitud: pos.coords.latitude,
+              longitud: pos.coords.longitude,
+            });
+          },
+          (err) => {
+            console.warn("Error obteniendo ubicación:", err.message);
+            resolve(null);
+          },
+          { enableHighAccuracy: true, timeout: 5000 },
+        );
+      });
+    }
+
+    async function iniciarGeneracion() {
+      const display = document.getElementById("uuid_display");
+      const bar = document.getElementById("scan-bar");
+      const infoDiv = document.getElementById("debug-info");
+      const btn = document.getElementById("btnGuardar");
+
+      if (bar) bar.style.width = "100%";
+
+      try {
+        // Obtenemos exclusivamente la localización GPS del laptop
+        coordenadas = await obtenerUbicacion();
+
+        if (infoDiv) {
+          infoDiv.innerHTML = "";
+          if (coordenadas) {
+            infoDiv.innerHTML = `
+              <div class="pt-2">
+                  <small class="text-muted d-block mb-2 text-uppercase fw-bold" style="font-size:10px">Ubicación Confirmada GPS</small>
+                  <span class="tech-badge w-100 text-start border-primary mb-2">
+                      <span class="tech-label text-primary"><i class="bi bi-geo-alt"></i> LAT:</span> ${coordenadas.latitud.toFixed(6)}
+                  </span>
+                  <span class="tech-badge w-100 text-start border-primary">
+                      <span class="tech-label text-primary"><i class="bi bi-geo-alt"></i> LON:</span> ${coordenadas.longitud.toFixed(6)}
+                  </span>
+              </div>`;
+          } else {
+            infoDiv.innerHTML = `<div class="text-warning small py-4 text-center"><i class="bi bi-exclamation-triangle fs-4 d-block mb-2"></i> GPS no detectado.<br>Verifique los permisos de su laptop.</div>`;
+          }
+        }
+
+        const marcaEsperada = btoa("vnc_active_Dispositivo vinculado");
+        if (localStorage.getItem("asist_vnc") === marcaEsperada) {
+          const idGuardado =
+            localStorage.getItem("device_token_id") || "VNC-ACTIVE";
+          setTimeout(() => {
+            if (display) {
+              const lat = coordenadas?.latitud
+                ? coordenadas.latitud.toFixed(6)
+                : "N/A";
+              const lon = coordenadas?.longitud
+                ? coordenadas.longitud.toFixed(6)
+                : "N/A";
+              display.value = `SISTEMA CRIPTO-REGISTRADO\nID: ${idGuardado}\nLAT: ${lat}\nLON: ${lon}`;
+            }
+            if (bar) bar.style.width = "0%";
+            if (btn) {
+              btn.disabled = true;
+              btn.innerHTML =
+                '<i class="bi bi-lock-fill me-2"></i>EQUIPO AUTORIZADO';
+            }
+          }, 400);
+          return;
+        }
+
+        setTimeout(() => {
+          if (display)
+            display.value = "SISTEMA LISTO\nEsperando firma criptográfica...";
+          if (bar) bar.style.width = "0%";
+        }, 500);
+      } catch (e) {
+        console.error("Error en inicialización:", e);
+      }
+    }
+
+    async function procesarFormulario(event, form) {
+      event.preventDefault();
+      const btn = document.getElementById("btnGuardar");
+      const codigoPDS = document.getElementById("codigo_pds").value.trim();
+      const nombrePDS = document.getElementById("nombre_pds").value.trim();
+
+      btn.disabled = true;
+
+      try {
+        const user = sessionStorage.getItem("codigoUsuario");
+
+        // 1. GENERACIÓN ASIMÉTRICA DE LLAVES EN CALIENTE
+        const parLlaves = await generarParDeLlaves();
+        const llavePrivada = parLlaves.privateKey;
+
+        // Exportamos la llave pública en formato nativo JWK
+        const jwkPublica = await window.crypto.subtle.exportKey(
+          "jwk",
+          parLlaves.publicKey,
+        );
+
+        // EXTRAER CLIENT ID MATEMÁTICO DIRECTO DEL WEB CRYPTO:
+        // Limpiamos los caracteres especiales del parámetro 'x' para formar un ID alfanumérico impecable
+        const stringLimpioX = jwkPublica.x.replace(/[-_]/g, "").toUpperCase();
+        const currentClientID = `SRV-${stringLimpioX.substring(0, 16)}`;
+
+        // 2. RETO DE AUTENTICIDAD (Firmamos la marca temporal exacta)
+        const timestamp = Date.now().toString();
+        const encoder = new TextEncoder();
+        const datosAFirmar = encoder.encode(timestamp);
+
+        const firmaBuffer = await window.crypto.subtle.sign(
+          { name: "ECDSA", hash: { name: "SHA-256" } },
+          llavePrivada,
+          datosAFirmar,
+        );
+        const firmaBase64 = btoa(
+          String.fromCharCode(...new Uint8Array(firmaBuffer)),
+        );
+
+        // 3. COMUNICACIÓN HACIA TU EDGE FUNCTION EN SUPABASE
+        const response = await fetch(
+          `${window.SUPABASE_URL}/functions/v1/asist_registrarServer`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              user: user,
+              device_id: currentClientID, // Creado desde el corazón de la llave asimétrica
+              pds_codigo: codigoPDS,
+              pds_nombre: nombrePDS,
+              latitud: coordenadas ? coordenadas.latitud : null,
+              longitud: coordenadas ? coordenadas.longitud : null,
+
+              // Carga de Confianza Cero (Zero Trust)
+              llave_publica: JSON.stringify(jwkPublica),
+              challenge: timestamp,
+              firma: firmaBase64,
+            }),
+          },
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.status === "success") {
+          // 4. AISLAMIENTO DE LA LLAVE PRIVADA EN INDEXEDDB
+          await guardarLlavePrivadaLocal(codigoPDS, llavePrivada);
+
+          // 5. VARIABLES DE PERSISTENCIA Y CONTROL LOCAL
+          localStorage.setItem(
+            "device_token_id",
+            result.device_token_id || currentClientID,
+          );
+          localStorage.setItem("pds_codigo", result.codigo_pds || codigoPDS);
+          localStorage.setItem("pds_nombre", result.nombre_pds || nombrePDS);
+
+          // ✅ AHORA (Seguro para caracteres especiales y UTF-8):
+          const textoVinculacion = "vnc_active_Dispositivo vinculado";
+          const bytesVinculacion = new TextEncoder().encode(textoVinculacion);
+          const base64Seguro = btoa(String.fromCharCode(...bytesVinculacion));
+
+          localStorage.setItem("asist_vnc", base64Seguro);
+
+          alertSMS(
+            "Portátil vinculado mediante firma criptográfica con éxito ✅",
+          );
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          throw new Error(result.error || "Error en el servidor");
+        }
+      } catch (err) {
+        alertSMS(err.message);
+        btn.disabled = false;
+      }
+    }
+
+    setTimeout(iniciarGeneracion, 100);
+    return { procesarFormulario, iniciarGeneracion };
+  })();
+</script>
